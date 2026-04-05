@@ -12,11 +12,10 @@ export async function POST(request: Request) {
 
   // Đọc đúng format Vapi gửi
   const rawArgs = body?.message?.toolCallList?.[0]?.function?.arguments;
-  const args = typeof rawArgs === "string"
-    ? JSON.parse(rawArgs)
-    : rawArgs ?? body;
+  const args =
+    typeof rawArgs === "string" ? JSON.parse(rawArgs) : (rawArgs ?? body);
 
-  const { type, role, level, techstack, amount, userid } = args;
+  const { type, role, level, techstack, amount, userId } = args;
   const toolCallId = body?.message?.toolCallList?.[0]?.id ?? "unknown";
 
   try {
@@ -58,7 +57,7 @@ export async function POST(request: Request) {
             .filter((q: string) => q.length > 0);
         }
       })(),
-      userid,
+      userId,
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
@@ -66,15 +65,17 @@ export async function POST(request: Request) {
 
     await db.collection("interviews").add(interview);
 
-    return Response.json({
-      results: [
-        {
-          toolCallId,
-          result: "Interview generated successfully!",
-        },
-      ],
-    }, { status: 200 });
-
+    return Response.json(
+      {
+        results: [
+          {
+            toolCallId,
+            result: "Interview generated successfully!",
+          },
+        ],
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Error generating content:", error);
     return Response.json(
