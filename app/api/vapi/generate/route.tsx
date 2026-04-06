@@ -1,17 +1,25 @@
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
-
-import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
+import { db } from "@/firebase/admin";
+
+export async function GET() {
+  return Response.json({ success: true, data: "Thank you!" }, { status: 200 });
+}
 
 export async function POST(request: Request) {
   const body = await request.json();
-  console.log("Received body:", body);
-  const { type, role, level, techstack, amount, userid } = await request.json();
 
+  const rawArgs = body?.message?.toolCallList?.[0]?.function?.arguments;
+  const args =
+    typeof rawArgs === "string" ? JSON.parse(rawArgs) : (rawArgs ?? body);
+
+  const { type, role, level, techstack, amount, userid } = args;
+  const toolCallId = body?.message?.toolCallList?.[0]?.id ?? "unknown";
+  console.log(userid);
   try {
     const { text: questions } = await generateText({
-      model: google("gemini-2.0-flash-001"),
+      model: google("gemini-2.5-flash"),
       prompt: `Prepare questions for a job interview.
         The job role is ${role}.
         The job experience level is ${level}.
@@ -28,11 +36,26 @@ export async function POST(request: Request) {
     });
 
     const interview = {
-      role: role,
-      type: type,
-      level: level,
-      techstack: techstack.split(","),
-      questions: JSON.parse(questions),
+      role,
+      type,
+      level,
+      techstack: techstack ? techstack.split(",") : [],
+      questions: (() => {
+        try {
+          if (Array.isArray(questions)) return questions;
+          if (typeof questions === "object") return Object.values(questions);
+          const cleaned = String(questions)
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
+          return JSON.parse(cleaned);
+        } catch {
+          return String(questions)
+            .split("\n")
+            .map((q: string) => q.trim())
+            .filter((q: string) => q.length > 0);
+        }
+      })(),
       userId: userid,
       finalized: true,
       coverImage: getRandomInterviewCover(),
@@ -41,13 +64,22 @@ export async function POST(request: Request) {
 
     await db.collection("interviews").add(interview);
 
-    return Response.json({ success: true }, { status: 200 });
+    return Response.json(
+      {
+        results: [
+          {
+            toolCallId,
+            result: "Interview generated successfully!",
+          },
+        ],
+      },
+      { status: 200 },
+    );
   } catch (error) {
-    console.error("Error:", error);
-    return Response.json({ success: false, error: error }, { status: 500 });
+    console.error("Error generating content:", error);
+    return Response.json(
+      { success: false, error: "Failed to generate content" },
+      { status: 500 },
+    );
   }
-}
-
-export async function GET() {
-  return Response.json({ success: true, data: "Thank you!" }, { status: 200 });
 }
