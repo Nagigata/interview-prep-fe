@@ -20,7 +20,7 @@ async function Home() {
 
   const hasPastInterviews = userInterviews?.length! > 0;
   const hasUpcomingInterviews = allInterview?.length! > 0;
-
+  console.log(user?.id);
   return (
     <>
       <section className="card-cta">

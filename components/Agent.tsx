@@ -116,12 +116,12 @@ const Agent = ({
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
-
+    console.log(userId);
     if (type === "generate") {
       await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
         variableValues: {
           username: userName,
-          userId: userId,
+          userid: userId,
         },
       });
     } else {
@@ -185,7 +185,7 @@ const Agent = ({
               key={lastMessage}
               className={cn(
                 "transition-opacity duration-500 opacity-0",
-                "animate-fadeIn opacity-100"
+                "animate-fadeIn opacity-100",
               )}
             >
               {lastMessage}
@@ -200,7 +200,7 @@ const Agent = ({
             <span
               className={cn(
                 "absolute animate-ping rounded-full opacity-75",
-                callStatus !== "CONNECTING" && "hidden"
+                callStatus !== "CONNECTING" && "hidden",
               )}
             />
 

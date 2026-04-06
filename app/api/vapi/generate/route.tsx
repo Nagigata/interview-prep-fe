@@ -15,9 +15,9 @@ export async function POST(request: Request) {
   const args =
     typeof rawArgs === "string" ? JSON.parse(rawArgs) : (rawArgs ?? body);
 
-  const { type, role, level, techstack, amount, userId } = args;
+  const { type, role, level, techstack, amount, userid } = args;
   const toolCallId = body?.message?.toolCallList?.[0]?.id ?? "unknown";
-
+  console.log(userid);
   try {
     const { text: questions } = await generateText({
       model: google("gemini-2.5-flash"),
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
             .filter((q: string) => q.length > 0);
         }
       })(),
-      userId,
+      userId: userid,
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
