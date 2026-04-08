@@ -11,11 +11,6 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import FormField from "./FormField";
 import { signIn, signUp } from "@/lib/actions/auth.action";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
-import { auth } from "@/firebase/client";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
@@ -43,14 +38,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
       if (type === "sign-up") {
         const { name, email, password } = data;
 
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
-
         const result = await signUp({
-          uid: userCredential.user.uid,
           name: name!,
           email,
           password,
@@ -66,30 +54,19 @@ const AuthForm = ({ type }: { type: FormType }) => {
       } else {
         const { email, password } = data;
 
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
+        const result = await signIn({ email, password });
 
-        const idToken = await userCredential.user.getIdToken();
-
-        if (!idToken) {
-          toast.error("Sign in failed. Please try again.");
+        if (!result?.success) {
+          toast.error(result?.message);
           return;
         }
-
-        await signIn({
-          email,
-          idToken,
-        });
 
         toast.success("Signed in successfully!");
         router.push("/");
       }
     } catch (error) {
       console.error(error);
-      toast.error("There was an error: ${error}");
+      toast.error(`There was an error: ${error}`);
     }
   };
 

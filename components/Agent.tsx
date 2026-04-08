@@ -25,7 +25,6 @@ const Agent = ({
   userName,
   userId,
   interviewId,
-  feedbackId,
   type,
   questions,
 }: AgentProps) => {
@@ -92,9 +91,7 @@ const Agent = ({
 
       const { success, feedbackId: id } = await createFeedback({
         interviewId: interviewId!,
-        userId: userId!,
         transcript: messages,
-        feedbackId,
       });
 
       if (success && id) {
@@ -112,11 +109,11 @@ const Agent = ({
         handleGenerateFeedback(messages);
       }
     }
-  }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
+  }, [messages, callStatus, interviewId, router, type, userId]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
-    //console.log(userId, userName);
+
     if (type === "generate") {
       await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
         variableValues: {
@@ -167,7 +164,7 @@ const Agent = ({
         <div className="card-border">
           <div className="card-content">
             <Image
-              src="/user-avatar.png"
+              src="/user-avatar2.png"
               alt="profile-image"
               width={539}
               height={539}

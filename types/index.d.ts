@@ -27,9 +27,7 @@ interface Interview {
 
 interface CreateFeedbackParams {
   interviewId: string;
-  userId: string;
   transcript: { role: string; content: string }[];
-  feedbackId?: string;
 }
 
 interface User {
@@ -51,7 +49,6 @@ interface AgentProps {
   userName: string;
   userId?: string;
   interviewId?: string;
-  feedbackId?: string;
   type: "generate" | "interview";
   questions?: string[];
 }
@@ -73,11 +70,10 @@ interface GetLatestInterviewsParams {
 
 interface SignInParams {
   email: string;
-  idToken: string;
+  password: string;
 }
 
 interface SignUpParams {
-  uid: string;
   name: string;
   email: string;
   password: string;

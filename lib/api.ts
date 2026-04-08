@@ -1,0 +1,67 @@
+import { cookies } from "next/headers";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get("token")?.value || null;
+  } catch {
+    // Client-side: token will be sent via cookie automatically
+    return null;
+  }
+}
+
+async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const token = await getAuthToken();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `API Error: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json.data !== undefined ? json.data : json;
+}
+
+export async function apiGet<T>(endpoint: string): Promise<T> {
+  return apiFetch<T>(endpoint, { method: "GET" });
+}
+
+export async function apiPost<T>(
+  endpoint: string,
+  body?: unknown,
+): Promise<T> {
+  return apiFetch<T>(endpoint, {
+    method: "POST",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+export async function apiPatch<T>(
+  endpoint: string,
+  body?: unknown,
+): Promise<T> {
+  return apiFetch<T>(endpoint, {
+    method: "PATCH",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
