@@ -7,6 +7,8 @@ import { getRandomInterviewCover } from "@/lib/utils";
 import { getInterviewById } from "@/lib/actions/general.action";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import DisplayTechIcons from "@/components/DisplayTechIcons";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
 
 const InterviewDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -16,7 +18,9 @@ const InterviewDetails = async ({ params }: RouteParams) => {
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
-
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
+  const t = getDictionary(locale);
 
   return (
     <>
@@ -30,7 +34,7 @@ const InterviewDetails = async ({ params }: RouteParams) => {
               height={40}
               className="rounded-full object-cover size-[40px]"
             />
-            <h3 className="capitalize">{interview.role} Interview</h3>
+            <h3 className="capitalize">{interview.role} {t.interviewCard.mockInterview}</h3>
           </div>
 
           <DisplayTechIcons techStack={interview.techstack} />
@@ -47,6 +51,8 @@ const InterviewDetails = async ({ params }: RouteParams) => {
         interviewId={id}
         type="interview"
         questions={interview.questions}
+        language={interview.language}
+        dictionary={t}
       />
     </>
   );

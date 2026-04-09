@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
-import { interviewer } from "@/constants";
+import { interviewer_en, interviewer_vi } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
 
 enum CallStatus {
@@ -27,12 +27,15 @@ const Agent = ({
   interviewId,
   type,
   questions,
+  language,
+  dictionary: t,
 }: AgentProps) => {
   const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
   useEffect(() => {
     const onCallStart = () => {
@@ -115,13 +118,20 @@ const Agent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+      const assistantId = selectedLanguage === "vi"
+        ? process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID_VI!
+        : process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID_EN!;
+
+      await vapi.start(assistantId, {
         variableValues: {
           username: userName,
           userid: userId,
+          language: selectedLanguage,
         },
       });
     } else {
+      const activeInterviewer = language === "vi" ? interviewer_vi : interviewer_en;
+      
       let formattedQuestions = "";
       if (questions) {
         formattedQuestions = questions
@@ -129,7 +139,7 @@ const Agent = ({
           .join("\n");
       }
 
-      await vapi.start(interviewer, {
+      await vapi.start(activeInterviewer, {
         variableValues: {
           questions: formattedQuestions,
         },
@@ -157,7 +167,7 @@ const Agent = ({
             />
             {isSpeaking && <span className="animate-speak" />}
           </div>
-          <h3>AI Interviewer</h3>
+          <h3>{t?.agent?.aiInterviewer || "AI Interviewer"}</h3>
         </div>
 
         {/* User Profile Card */}
@@ -191,7 +201,21 @@ const Agent = ({
         </div>
       )}
 
-      <div className="w-full flex justify-center">
+      <div className="w-full flex flex-col items-center gap-4">
+        {type === "generate" && callStatus === "INACTIVE" && (
+          <div className="flex gap-4 items-center">
+            <span className="font-semibold text-white">{t?.agent?.selectLanguage || "Select Language:"}</span>
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="bg-dark-200 border border-dark-300 rounded-md px-3 py-1 outline-none text-white focus:ring hover:border-user-primary transition-all"
+            >
+              <option value="en">English 🇺🇸</option>
+              <option value="vi">Tiếng Việt 🇻🇳</option>
+            </select>
+          </div>
+        )}
+
         {callStatus !== "ACTIVE" ? (
           <button className="relative btn-call" onClick={() => handleCall()}>
             <span
@@ -203,13 +227,13 @@ const Agent = ({
 
             <span className="relative">
               {callStatus === "INACTIVE" || callStatus === "FINISHED"
-                ? "Call"
+                ? (t?.agent?.callBtn || "Call")
                 : ". . ."}
             </span>
           </button>
         ) : (
           <button className="btn-disconnect" onClick={() => handleDisconnect()}>
-            End
+            {t?.agent?.endBtn || "End"}
           </button>
         )}
       </div>

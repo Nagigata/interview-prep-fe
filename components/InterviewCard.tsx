@@ -7,6 +7,8 @@ import DisplayTechIcons from "./DisplayTechIcons";
 
 import { cn, getRandomInterviewCover } from "@/lib/utils";
 import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
 
 const InterviewCard = async ({
   interviewId,
@@ -15,6 +17,7 @@ const InterviewCard = async ({
   type,
   techstack,
   createdAt,
+  language,
 }: InterviewCardProps) => {
   const feedback =
     userId && interviewId
@@ -25,6 +28,10 @@ const InterviewCard = async ({
       : null;
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
+
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
+  const t = getDictionary(locale);
 
   const badgeColor =
     {
@@ -41,14 +48,23 @@ const InterviewCard = async ({
     <div className="card-border w-[360px] max-sm:w-full min-h-96">
       <div className="card-interview">
         <div>
-          {/* Type Badge */}
-          <div
-            className={cn(
-              "absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg",
-              badgeColor,
+          <div className="absolute top-0 right-0 flex max-sm:flex-col">
+            {/* Language Badge */}
+            {language && (
+              <div className={cn("px-4 py-2 rounded-bl-lg max-sm:rounded-bl-none max-sm:rounded-tl-none bg-dark-300 text-white border-b border-l border-dark-200")}>
+                <p className="badge-text shadow-xl">{language === "vi" ? "🇻🇳 VI" : "🇺🇸 EN"}</p>
+              </div>
             )}
-          >
-            <p className="badge-text ">{normalizedType}</p>
+
+            {/* Type Badge */}
+            <div
+              className={cn(
+                "px-4 py-2 rounded-bl-lg max-sm:rounded-bl-none max-sm:rounded-tl-none",
+                badgeColor,
+              )}
+            >
+              <p className="badge-text">{normalizedType}</p>
+            </div>
           </div>
 
           {/* Cover Image */}
@@ -61,7 +77,9 @@ const InterviewCard = async ({
           />
 
           {/* Interview Role */}
-          <h3 className="mt-5 capitalize">{role} Interview</h3>
+          <h3 className="mt-5 capitalize">
+            {role} {t.interviewCard.mockInterview}
+          </h3>
 
           {/* Date & Score */}
           <div className="flex flex-row gap-5 mt-3">
@@ -83,8 +101,7 @@ const InterviewCard = async ({
 
           {/* Feedback or Placeholder Text */}
           <p className="line-clamp-2 mt-5">
-            {feedback?.finalAssessment ||
-              "You haven't taken this interview yet. Take it now to improve your skills."}
+            {feedback?.finalAssessment || t.interviewCard.notTakenMsg}
           </p>
         </div>
 
@@ -99,7 +116,7 @@ const InterviewCard = async ({
                   : `/interview/${interviewId}`
               }
             >
-              {feedback ? "Check Feedback" : "View Interview"}
+              {feedback ? t.interviewCard.viewFeedback : t.interviewCard.startInterview}
             </Link>
           </Button>
         </div>

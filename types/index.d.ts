@@ -22,6 +22,7 @@ interface Interview {
   createdAt: string;
   userId: string;
   type: string;
+  language: string;
   finalized: boolean;
 }
 
@@ -43,6 +44,7 @@ interface InterviewCardProps {
   type: string;
   techstack: string[];
   createdAt?: string;
+  language?: string;
 }
 
 interface AgentProps {
@@ -50,7 +52,9 @@ interface AgentProps {
   userId?: string;
   interviewId?: string;
   type: "generate" | "interview";
+  language?: string;
   questions?: string[];
+  dictionary?: any;
 }
 
 interface RouteParams {

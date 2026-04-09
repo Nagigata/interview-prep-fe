@@ -20,7 +20,7 @@ const authFormSchema = (type: FormType) => {
   });
 };
 
-const AuthForm = ({ type }: { type: FormType }) => {
+const AuthForm = ({ type, dictionary: t }: { type: FormType, dictionary?: any }) => {
   const router = useRouter();
 
   const formSchema = authFormSchema(type);
@@ -49,7 +49,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           return;
         }
 
-        toast.success("Account created successfully!");
+        toast.success(t?.auth?.signUpSuccess || "Account created successfully!");
         router.push("/sign-in");
       } else {
         const { email, password } = data;
@@ -61,7 +61,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           return;
         }
 
-        toast.success("Signed in successfully!");
+        toast.success(t?.auth?.signInSuccess || "Signed in successfully!");
         router.push("/");
       }
     } catch (error) {
@@ -80,7 +80,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <h2 className="text-primary-100">PrepWise</h2>
         </div>
 
-        <h3>Practice job interviews with AI</h3>
+        <h3>{t?.auth?.subtitle || "Practice job interviews with AI"}</h3>
 
         <Form {...form}>
           <form
@@ -91,8 +91,8 @@ const AuthForm = ({ type }: { type: FormType }) => {
               <FormField
                 control={form.control}
                 name="name"
-                label="Name"
-                placeholder="Your Name"
+                label={t?.auth?.nameLabel || "Name"}
+                placeholder={t?.auth?.namePlaceholder || "Your Name"}
                 type="text"
               />
             )}
@@ -100,32 +100,32 @@ const AuthForm = ({ type }: { type: FormType }) => {
             <FormField
               control={form.control}
               name="email"
-              label="Email"
-              placeholder="Your email address"
+              label={t?.auth?.emailLabel || "Email"}
+              placeholder={t?.auth?.emailPlaceholder || "Your email address"}
               type="email"
             />
 
             <FormField
               control={form.control}
               name="password"
-              label="Password"
-              placeholder="Enter your password"
+              label={t?.auth?.passwordLabel || "Password"}
+              placeholder={t?.auth?.passwordPlaceholder || "Enter your password"}
               type="password"
             />
 
             <Button className="btn" type="submit">
-              {isSignIn ? "Sign In" : "Create an Account"}
+              {isSignIn ? (t?.auth?.signInBtn || "Sign In") : (t?.auth?.signUpBtn || "Create an Account")}
             </Button>
           </form>
         </Form>
 
         <p className="text-center">
-          {isSignIn ? "No account yet?" : "Have an account already?"}
+          {isSignIn ? (t?.auth?.noAccount || "No account yet?") : (t?.auth?.haveAccount || "Have an account already?")}
           <Link
             href={!isSignIn ? "/sign-in" : "/sign-up"}
             className="font-bold text-user-primary ml-1"
           >
-            {!isSignIn ? "Sign In" : "Sign Up"}
+            {!isSignIn ? (t?.auth?.signInBtn || "Sign In") : (t?.auth?.signUpBtn || "Sign Up")}
           </Link>
         </p>
       </div>

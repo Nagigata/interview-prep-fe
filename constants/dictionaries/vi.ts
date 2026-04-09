@@ -1,0 +1,56 @@
+export const vi = {
+  home: {
+    heroTitle: "Sẵn sàng Phỏng vấn với Trợ lý AI",
+    heroDesc:
+      "Thực hành các câu hỏi phỏng vấn thực tế và nhận phản hồi tức thì",
+    startBtn: "Bắt đầu Phỏng vấn",
+    yourInterviews: "Các cuộc phỏng vấn của bạn",
+    noPastInterviews: "Bạn chưa tham gia cuộc phỏng vấn nào",
+    takeInterviews: "Thử sức ngay",
+    noUpcomingInterviews: "Chưa có cuộc phỏng vấn nào khả dụng",
+  },
+  auth: {
+    subtitle: "Luyện tập phỏng vấn với AI",
+    nameLabel: "Họ và Tên",
+    namePlaceholder: "Nhập tên của bạn",
+    emailLabel: "Email",
+    emailPlaceholder: "Nhập địa chỉ email",
+    passwordLabel: "Mật khẩu",
+    passwordPlaceholder: "Nhập mật khẩu",
+    signInBtn: "Đăng Nhập",
+    signUpBtn: "Đăng Ký",
+    noAccount: "Chưa có tài khoản?",
+    haveAccount: "Đã có tài khoản?",
+    signInSuccess: "Đăng nhập thành công!",
+    signUpSuccess: "Tạo tài khoản thành công!",
+  },
+  agent: {
+    aiInterviewer: "AI Phỏng Vấn",
+    callBtn: "Gọi",
+    endBtn: "Kết thúc",
+    selectLanguage: "Ngôn ngữ hệ thống:",
+  },
+  interviewCard: {
+    questions: "câu hỏi",
+    startInterview: "Bắt đầu",
+    viewFeedback: "Xem Đánh Giá",
+    feedback: "Phản hồi",
+    mockInterview: "Phỏng vấn",
+    notTakenMsg:
+      "Bạn chưa bắt đầu bài phỏng vấn này. Hãy bấm bắt đầu để rèn luyện ngay.",
+  },
+  feedback: {
+    title: "Kết quả Phỏng vấn - ",
+    overallImpression: "Đánh giá chung:",
+    breakdown: "Chi tiết đánh giá:",
+    totalScore: "Tổng điểm",
+    areasForImprovement: "Điểm cần cải thiện",
+    strengths: "Điểm mạnh",
+    score: "Điểm",
+    comment: "Nhận xét",
+  },
+  common: {
+    backHome: "Về lại trang chủ",
+    retakeInterview: "Phỏng vấn lại",
+  },
+};

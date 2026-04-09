@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import InterviewCard from "@/components/InterviewCard";
 
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
   getInterviewsByUserId,
@@ -21,17 +23,22 @@ async function Home() {
   const hasPastInterviews = userInterviews?.length! > 0;
   const hasUpcomingInterviews = allInterview?.length! > 0;
   console.log(user?.id);
+
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
+  const t = getDictionary(locale);
+
   return (
     <>
       <section className="card-cta">
         <div className="flex flex-col gap-6 max-w-lg">
-          <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
+          <h2>{t.home.heroTitle}</h2>
           <p className="text-lg">
-            Practice real interview questions & get instant feedback
+            {t.home.heroDesc}
           </p>
 
           <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start an Interview</Link>
+            <Link href="/interview">{t.home.startBtn}</Link>
           </Button>
         </div>
 
@@ -45,7 +52,7 @@ async function Home() {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Your Interviews</h2>
+        <h2>{t.home.yourInterviews}</h2>
 
         <div className="interviews-section">
           {hasPastInterviews ? (
@@ -58,16 +65,17 @@ async function Home() {
                 type={interview.type}
                 techstack={interview.techstack}
                 createdAt={interview.createdAt}
+                language={interview.language}
               />
             ))
           ) : (
-            <p>You haven&apos;t taken any interviews yet</p>
+            <p>{t.home.noPastInterviews}</p>
           )}
         </div>
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Take Interviews</h2>
+        <h2>{t.home.takeInterviews}</h2>
 
         <div className="interviews-section">
           {hasUpcomingInterviews ? (
@@ -80,10 +88,11 @@ async function Home() {
                 type={interview.type}
                 techstack={interview.techstack}
                 createdAt={interview.createdAt}
+                language={interview.language}
               />
             ))
           ) : (
-            <p>There are no interviews available</p>
+            <p>{t.home.noUpcomingInterviews}</p>
           )}
         </div>
       </section>
