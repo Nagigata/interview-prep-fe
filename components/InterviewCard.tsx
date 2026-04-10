@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
-import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
 import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
@@ -22,9 +22,9 @@ const InterviewCard = async ({
   const feedback =
     userId && interviewId
       ? await getFeedbackByInterviewId({
-          interviewId,
-          userId,
-        })
+        interviewId,
+        userId,
+      })
       : null;
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
@@ -67,14 +67,10 @@ const InterviewCard = async ({
             </div>
           </div>
 
-          {/* Cover Image */}
-          <Image
-            src={getRandomInterviewCover()}
-            alt="cover-image"
-            width={90}
-            height={90}
-            className="rounded-full object-fit size-[90px]"
-          />
+          {/* Role Initial Avatar */}
+          <div className="flex items-center justify-center bg-primary-200/20 text-primary-200 font-bold text-4xl rounded-full size-[72px] mt-4 shadow-inner ring-1 ring-primary-200/50">
+            {role ? role.charAt(0).toUpperCase() : "I"}
+          </div>
 
           {/* Interview Role */}
           <h3 className="mt-5 capitalize">
@@ -105,16 +101,20 @@ const InterviewCard = async ({
           </p>
         </div>
 
-        <div className="flex flex-row justify-between">
-          <DisplayTechIcons techStack={techstack} />
+        <div className="flex flex-col gap-4 mt-4 border-t border-dark-300 pt-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-light-100">Tech Stack:</span>
+            <DisplayTechIcons techStack={techstack} />
+          </div>
 
-          <Button className="btn-primary">
+          <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
             <Link
               href={
                 feedback
                   ? `/interview/${interviewId}/feedback`
                   : `/interview/${interviewId}`
               }
+              className="px-6 flex items-center justify-center w-full h-full"
             >
               {feedback ? t.interviewCard.viewFeedback : t.interviewCard.startInterview}
             </Link>

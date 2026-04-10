@@ -4,7 +4,7 @@ export const vi = {
     heroDesc:
       "Thực hành các câu hỏi phỏng vấn thực tế và nhận phản hồi tức thì",
     startBtn: "Bắt đầu Phỏng vấn",
-    yourInterviews: "Các cuộc phỏng vấn của bạn",
+    yourInterviews: "Phỏng vấn của bạn",
     noPastInterviews: "Bạn chưa tham gia cuộc phỏng vấn nào",
     takeInterviews: "Thử sức ngay",
     noUpcomingInterviews: "Chưa có cuộc phỏng vấn nào khả dụng",
@@ -28,7 +28,8 @@ export const vi = {
     aiInterviewer: "AI Phỏng Vấn",
     callBtn: "Gọi",
     endBtn: "Kết thúc",
-    selectLanguage: "Ngôn ngữ hệ thống:",
+    selectLanguage: "Ngôn ngữ phỏng vấn:",
+    setupInstruction: "Vui lòng chọn ngôn ngữ để bắt đầu.",
   },
   interviewCard: {
     questions: "câu hỏi",
@@ -52,5 +53,6 @@ export const vi = {
   common: {
     backHome: "Về lại trang chủ",
     retakeInterview: "Phỏng vấn lại",
+    logout: "Đăng xuất",
   },
 };

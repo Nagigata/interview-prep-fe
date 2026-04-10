@@ -28,6 +28,7 @@ export const en = {
     callBtn: "Call",
     endBtn: "End",
     selectLanguage: "System Language:",
+    setupInstruction: "Please select your preferred language before we proceed.",
   },
   interviewCard: {
     questions: "questions",
@@ -50,5 +51,6 @@ export const en = {
   common: {
     backHome: "Back to dashboard",
     retakeInterview: "Retake Interview",
+    logout: "Logout",
   }
 };

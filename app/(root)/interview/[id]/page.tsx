@@ -2,8 +2,6 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import Agent from "@/components/Agent";
-import { getRandomInterviewCover } from "@/lib/utils";
-
 import { getInterviewById } from "@/lib/actions/general.action";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import DisplayTechIcons from "@/components/DisplayTechIcons";
@@ -27,14 +25,9 @@ const InterviewDetails = async ({ params }: RouteParams) => {
       <div className="flex flex-row gap-4 justify-between">
         <div className="flex flex-row gap-4 items-center max-sm:flex-col">
           <div className="flex flex-row gap-4 items-center">
-            <Image
-              src={getRandomInterviewCover()}
-              alt="cover-image"
-              width={40}
-              height={40}
-              className="rounded-full object-cover size-[40px]"
-            />
-            <h3 className="capitalize">{interview.role} {t.interviewCard.mockInterview}</h3>
+            <h3 className="capitalize text-2xl font-bold bg-primary-200/10 px-4 py-2 rounded-xl text-primary-100 border border-primary-200/20">
+              {interview.role} {t.interviewCard.mockInterview}
+            </h3>
           </div>
 
           <DisplayTechIcons techStack={interview.techstack} />

@@ -5,6 +5,8 @@ import { isAuthenticated } from "@/lib/actions/auth.action";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LogoutButton from "@/components/LogoutButton";
+import { getDictionary } from "@/lib/i18n";
 
 const RootLayout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -13,6 +15,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
 
   const cookieStore = await cookies();
   const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
+  const t = getDictionary(locale);
 
   return (
     <div className="root-layout">
@@ -23,7 +26,10 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
         </Link>
 
         {/* Right side controls */}
-        <LanguageSwitcher currentLocale={locale} />
+        <div className="flex items-center">
+          <LanguageSwitcher currentLocale={locale} />
+          <LogoutButton label={t.common.logout} />
+        </div>
       </nav>
       {/* Main Content */}
       <div className="w-full">
