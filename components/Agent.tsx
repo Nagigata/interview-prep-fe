@@ -1,14 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer_en, interviewer_vi } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
-import { Mic, Phone, PhoneOff, Settings, Volume2 } from "lucide-react";
+import { ChevronDown, Mic, Phone, PhoneOff, Settings, Volume2 } from "lucide-react";
 import { Facehash } from "facehash";
 
 enum CallStatus {
@@ -39,6 +39,8 @@ const Agent = ({
   const [lastMessage, setLastMessage] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onCallStart = () => {
@@ -77,6 +79,13 @@ const Agent = ({
     vapi.on("speech-end", onSpeechEnd);
     vapi.on("error", onError);
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setIsLangMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       vapi.stop();
       vapi.off("call-start", onCallStart);
@@ -85,6 +94,7 @@ const Agent = ({
       vapi.off("speech-start", onSpeechStart);
       vapi.off("speech-end", onSpeechEnd);
       vapi.off("error", onError);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -159,7 +169,7 @@ const Agent = ({
   };
 
   return (
-    <div className="w-full flex justify-center mt-6">
+    <div className="w-full min-w-[500px] flex justify-center mt-6">
       {type === "generate" ? (
         <div className="w-full max-w-lg bg-dark-200/50 backdrop-blur-sm border border-dark-300 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-2xl">
           <div className="bg-primary-200/10 p-4 rounded-full border border-primary-200/30">
@@ -178,15 +188,45 @@ const Agent = ({
               <Mic className="size-5" />
               {t?.agent?.selectLanguage || "Select Language"}
             </span>
-            <select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              disabled={callStatus !== "INACTIVE"}
-              className="bg-dark-100 border border-primary-200/50 rounded-lg px-4 py-2 outline-none text-white focus:ring-2 focus:ring-primary-200 focus:border-transparent transition-all cursor-pointer disabled:opacity-50"
-            >
-              <option value="en">English 🇺🇸</option>
-              <option value="vi">Tiếng Việt 🇻🇳</option>
-            </select>
+            <div className="relative" ref={langMenuRef}>
+              <button
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                disabled={callStatus !== "INACTIVE"}
+                className="bg-dark-100 border border-primary-200/50 rounded-lg px-4 py-2 flex items-center gap-3 text-white hover:border-primary-200 transition-all cursor-pointer disabled:opacity-50 min-w-[160px] justify-between shadow-md"
+              >
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={selectedLanguage === "vi" ? "https://flagcdn.com/vn.svg" : "https://flagcdn.com/gb.svg"}
+                    alt={selectedLanguage}
+                    width={24}
+                    height={16}
+                  />
+                  <span className="font-medium">
+                    {selectedLanguage === "vi" ? "Tiếng Việt" : "English"}
+                  </span>
+                </div>
+                <ChevronDown className={`size-4 transition-transform ${isLangMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isLangMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-full bg-dark-100 border border-primary-200/30 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                  <button
+                    onClick={() => { setSelectedLanguage("en"); setIsLangMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-300 transition-colors ${selectedLanguage === "en" ? "bg-dark-300 text-primary-200 font-bold" : "text-white"}`}
+                  >
+                    <Image src="https://flagcdn.com/gb.svg" alt="English" width={24} height={16} />
+                    <span>English</span>
+                  </button>
+                  <button
+                    onClick={() => { setSelectedLanguage("vi"); setIsLangMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-300 transition-colors ${selectedLanguage === "vi" ? "bg-dark-300 text-primary-200 font-bold" : "text-white"}`}
+                  >
+                    <Image src="https://flagcdn.com/vn.svg" alt="Tiếng Việt" width={24} height={14} />
+                    <span>Tiếng Việt</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {callStatus !== "ACTIVE" ? (

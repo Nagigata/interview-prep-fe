@@ -51,15 +51,24 @@ const InterviewCard = async ({
           <div className="absolute top-0 right-0 flex max-sm:flex-col">
             {/* Language Badge */}
             {language && (
-              <div className={cn("px-4 py-2 rounded-bl-lg max-sm:rounded-bl-none max-sm:rounded-tl-none bg-dark-300 text-white border-b border-l border-dark-200")}>
-                <p className="badge-text shadow-xl">{language === "vi" ? "🇻🇳 VI" : "🇺🇸 EN"}</p>
+              <div className={cn("px-4 py-2 rounded-bl-lg max-sm:rounded-bl-none max-sm:rounded-tl-none bg-dark-200/50 backdrop-blur-sm text-white border-b border-l border-white/10 flex items-center gap-2")}>
+                <Image
+                  src={language === "vi" ? "https://flagcdn.com/vn.svg" : "https://flagcdn.com/gb.svg"}
+                  alt={language}
+                  width={24}
+                  height={16}
+                  className="object-cover"
+                />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  {language === "vi" ? "VI" : "EN"}
+                </span>
               </div>
             )}
 
             {/* Type Badge */}
             <div
               className={cn(
-                "px-4 py-2 rounded-bl-lg max-sm:rounded-bl-none max-sm:rounded-tl-none",
+                "px-4 py-2  max-sm:rounded-bl-none max-sm:rounded-tl-none",
                 badgeColor,
               )}
             >
@@ -68,9 +77,9 @@ const InterviewCard = async ({
           </div>
 
           {/* Role Initial Avatar */}
-          <div className="flex items-center justify-center bg-primary-200/20 text-primary-200 font-bold text-4xl rounded-full size-[72px] mt-4 shadow-inner ring-1 ring-primary-200/50">
+          {/* <div className="flex items-center justify-center bg-primary-200/20 text-primary-200 font-bold text-4xl rounded-full size-[72px] mt-4 shadow-inner ring-1 ring-primary-200/50">
             {role ? role.charAt(0).toUpperCase() : "I"}
-          </div>
+          </div> */}
 
           {/* Interview Role */}
           <h3 className="mt-5 capitalize">
