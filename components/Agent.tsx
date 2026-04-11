@@ -9,7 +9,7 @@ import { vapi } from "@/lib/vapi.sdk";
 import { interviewer_en, interviewer_vi } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
 import { ChevronDown, Mic, Phone, PhoneOff, Settings, Volume2 } from "lucide-react";
-import { Facehash } from "facehash";
+import Avatar from "boring-avatars";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -305,10 +305,11 @@ const Agent = ({
             <div className="flex flex-col gap-4 justify-center items-center p-7 bg-dark-200 border border-dark-300 rounded-2xl shadow-xl w-full max-w-[400px] sm:min-w-[400px] h-[400px] z-10 relative">
               <div className="relative p-2 rounded-full border-2 border-dashed border-light-600">
                 <div className="rounded-full overflow-hidden w-[110px] h-[110px] border border-light-400">
-                  <Facehash
-                    name={userName || "User"}
+                  <Avatar
                     size={110}
-                    colorClasses={["bg-indigo-500", "bg-pink-500"]}
+                    name={userName || "User"}
+                    variant="marble"
+                    colors={["#49de50", "#10b981", "#3b82f6", "#6366f1", "#0f172a"]}
                   />
                 </div>
               </div>
