@@ -10,6 +10,8 @@ import { interviewer_en, interviewer_vi } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
 import { ChevronDown, Mic, Phone, PhoneOff, Settings, Volume2 } from "lucide-react";
 import Avatar from "boring-avatars";
+import { AgentProps } from "@/types";
+
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -22,6 +24,14 @@ interface SavedMessage {
   role: "user" | "system" | "assistant";
   content: string;
 }
+
+interface Message {
+  type: string;
+  transcriptType?: string;
+  role: "user" | "assistant";
+  transcript: string;
+}
+
 
 const Agent = ({
   userName,
@@ -169,7 +179,7 @@ const Agent = ({
   };
 
   return (
-    <div className="w-full min-w-[500px] flex justify-center mt-6">
+    <div className="w-full flex justify-center mt-6 px-6 ">
       {type === "generate" ? (
         <div className="w-full max-w-lg bg-dark-200/50 backdrop-blur-sm border border-dark-300 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-2xl">
           <div className="bg-primary-200/10 p-4 rounded-full border border-primary-200/30">
@@ -209,7 +219,7 @@ const Agent = ({
               </button>
 
               {isLangMenuOpen && (
-                <div className="absolute top-full right-0 mt-2 w-full bg-dark-100 border border-primary-200/30 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full right-0 mt-2 w-full bg-dark-100 border border-primary-200/30 rounded-xl shadow-2xl overflow-hidden z-100 animate-in fade-in slide-in-from-top-2 duration-200">
                   <button
                     onClick={() => { setSelectedLanguage("en"); setIsLangMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-300 transition-colors ${selectedLanguage === "en" ? "bg-dark-300 text-primary-200 font-bold" : "text-white"}`}
@@ -271,21 +281,21 @@ const Agent = ({
           )}
         </div>
       ) : (
-        <div className="w-full max-w-4xl flex flex-col gap-8">
+        <div className="w-full max-w-6xl flex flex-col gap-10">
           <div className="flex sm:flex-row flex-col gap-6 lg:gap-10 items-stretch justify-between w-full relative">
             {/* Connection Status line between cards (visual only on large screens) */}
             <div className="hidden sm:block absolute top-1/2 left-1/4 right-1/4 h-1 border-t-2 border-dashed border-dark-300 z-0"></div>
 
             {/* AI Interviewer Card */}
-            <div className="flex flex-col gap-4 justify-center items-center p-7 bg-dark-200 border border-primary-200/20 rounded-2xl shadow-xl w-full max-w-[400px] sm:min-w-[400px] h-[400px] z-10 relative">
+            <div className="flex flex-col gap-6 justify-center items-center p-10 bg-dark-200 border border-primary-200/20 rounded-3xl shadow-2xl flex-1 min-h-[450px] z-10 relative">
               <div className="relative p-2 rounded-full border-2 border-dashed border-primary-200/50">
                 <div className={cn("absolute inset-[-10px] rounded-full bg-primary-200/20", isSpeaking ? "animate-ping opacity-75" : "opacity-0")}></div>
-                <div className="rounded-full w-[110px] h-[110px] relative z-10 bg-[#eef0ff] flex items-center justify-center shadow-inner border border-white">
+                <div className="rounded-full w-[140px] h-[140px] relative z-10 bg-[#eef0ff] flex items-center justify-center shadow-inner border border-white">
                   <Image
                     src="/ai-avatar.png"
                     alt="AI Logo"
-                    width={60}
-                    height={60}
+                    width={80}
+                    height={80}
                     className="opacity-90"
                   />
                 </div>
@@ -302,11 +312,11 @@ const Agent = ({
             </div>
 
             {/* User Profile Card */}
-            <div className="flex flex-col gap-4 justify-center items-center p-7 bg-dark-200 border border-dark-300 rounded-2xl shadow-xl w-full max-w-[400px] sm:min-w-[400px] h-[400px] z-10 relative">
+            <div className="flex flex-col gap-6 justify-center items-center p-10 bg-dark-200 border border-dark-300 rounded-3xl shadow-2xl flex-1 min-h-[450px] z-10 relative">
               <div className="relative p-2 rounded-full border-2 border-dashed border-light-600">
-                <div className="rounded-full overflow-hidden w-[110px] h-[110px] border border-light-400">
+                <div className="rounded-full overflow-hidden w-[140px] h-[140px] border border-light-400">
                   <Avatar
-                    size={110}
+                    size={140}
                     name={userName || "User"}
                     variant="marble"
                     colors={["#49de50", "#10b981", "#3b82f6", "#6366f1", "#0f172a"]}

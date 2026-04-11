@@ -12,7 +12,7 @@ const page = async () => {
 
   return (
     <>
-      <h3 className="mb-4">{t.agent.aiInterviewer} - Setup</h3>
+      <h3 className="flex justify-center mb-4">{t.agent.aiInterviewer} - Setup</h3>
 
       <Agent userName={user?.name!} userId={user?.id} type="generate" dictionary={t} />
     </>

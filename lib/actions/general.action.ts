@@ -1,6 +1,13 @@
 "use server";
 
 import { apiGet, apiPost } from "@/lib/api";
+import { 
+  CreateFeedbackParams, 
+  Feedback, 
+  Interview, 
+  GetFeedbackByInterviewIdParams, 
+  GetLatestInterviewsParams 
+} from "@/types";
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, transcript } = params;
@@ -18,9 +25,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
   }
 }
 
-export async function getInterviewById(
-  id: string,
-): Promise<Interview | null> {
+export async function getInterviewById(id: string): Promise<Interview | null> {
   try {
     return await apiGet<Interview>(`/interviews/${id}`);
   } catch {

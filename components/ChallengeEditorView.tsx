@@ -1,0 +1,282 @@
+"use client";
+
+import { useState } from "react";
+import { Challenge } from "@/types";
+import { 
+  Panel, 
+  Group, 
+  Separator 
+} from "react-resizable-panels";
+import ProblemDescription from "@/components/ProblemDescription";
+import CodeEditor from "@/components/CodeEditor";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+import { runCode, submitChallenge } from "@/lib/actions/submissions.action";
+
+interface ChallengeEditorViewProps {
+  challenge: Challenge;
+  dictionary: any;
+  skillSlug: string;
+}
+
+const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEditorViewProps) => {
+  const templateCode = challenge.templateCode as Record<string, string>;
+  const availableLangs = Object.keys(templateCode);
+  
+  // States for user interaction
+  const [language, setLanguage] = useState<string>(
+    availableLangs.includes("python") ? "python" : availableLangs[0]
+  );
+  const [code, setCode] = useState<string>(templateCode[language] || "");
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionResult, setExecutionResult] = useState<any>(null);
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+
+  const handleRunCode = async () => {
+    setIsExecuting(true);
+    setIsConsoleOpen(true);
+    setExecutionResult(null);
+
+    const result = await runCode({
+      challengeId: challenge.id,
+      code,
+      language
+    });
+
+    if (result.success) {
+      setExecutionResult(result.data);
+      if (result.data.testCaseResults?.[0]?.status?.id === 3) {
+        toast.success("Test case passed!");
+      } else {
+        toast.error("Test case failed");
+      }
+    } else {
+      toast.error(result.error);
+    }
+    setIsExecuting(false);
+  };
+
+  const handleSubmit = async () => {
+    setIsExecuting(true);
+    setIsConsoleOpen(true);
+    setExecutionResult(null);
+
+    const result = await submitChallenge({
+      challengeId: challenge.id,
+      code,
+      language
+    });
+
+    if (result.success) {
+      setExecutionResult(result.data);
+      if (result.data.allPassed) {
+        toast.success("Congratulations! All test cases passed.", {
+          duration: 5000,
+        });
+      } else {
+        toast.error("Some test cases failed. Keep trying!");
+      }
+    } else {
+      toast.error(result.error);
+    }
+    setIsExecuting(false);
+  };
+
+  const handleResetCode = () => {
+    setCode(templateCode[language] || "");
+    setExecutionResult(null);
+    toast.info("Code has been reset to template");
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-140px)] -mt-6">
+      {/* Top Header/Toolbar */}
+      <header className="flex items-center justify-between px-6 py-3 bg-dark-300 border-b border-white/5 rounded-t-2xl shadow-lg">
+        <div className="flex items-center gap-4">
+          <Link 
+            href={`/preparation/${skillSlug}`}
+            className="p-2 hover:bg-dark-200 rounded-lg transition-colors text-light-400 hover:text-white"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Link>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-light-600 uppercase font-bold tracking-widest">{skillSlug}</span>
+            <h2 className="text-sm font-bold text-white leading-none">{challenge.title}</h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <select 
+            value={language}
+            disabled={isExecuting}
+            onChange={(e) => {
+              const newLang = e.target.value;
+              setLanguage(newLang);
+              setCode(templateCode[newLang] || "");
+              setExecutionResult(null);
+            }}
+            className="bg-dark-200 text-light-100 text-xs font-bold border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary-200 cursor-pointer disabled:opacity-50"
+          >
+            {availableLangs.map((lang) => (
+              <option key={lang} value={lang} className="capitalize">{lang}</option>
+            ))}
+          </select>
+
+          <Button 
+            variant="outline" 
+            size="sm"
+            disabled={isExecuting}
+            onClick={handleResetCode}
+            className="bg-dark-200 border-white/10 text-light-100 hover:bg-dark-100 hover:text-white"
+          >
+            Reset
+          </Button>
+
+          <div className="h-6 w-px bg-white/5 mx-1" />
+
+          <Button 
+            size="sm"
+            disabled={isExecuting}
+            onClick={handleRunCode}
+            className="bg-primary-200 text-dark-100 hover:bg-primary-200/80 font-bold px-6 min-w-[80px]"
+          >
+            {isExecuting ? <div className="size-4 border-2 border-dark-100/30 border-t-dark-100 rounded-full animate-spin" /> : "Run"}
+          </Button>
+          
+          <Button 
+            size="sm"
+            disabled={isExecuting}
+            onClick={handleSubmit}
+            className="bg-success-100 text-white hover:bg-success-200 font-bold px-6 min-w-[100px]"
+          >
+            {isExecuting ? <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Submit"}
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Resizable Layout */}
+      <div className="flex-1 overflow-hidden relative border-x border-b border-white/5 rounded-b-2xl shadow-2xl bg-dark-400">
+        <Group orientation="horizontal">
+          {/* Left: Problem Description */}
+          <Panel defaultSize={40} minSize={30}>
+            <ProblemDescription challenge={challenge} />
+          </Panel>
+
+          <Separator className="w-1 bg-white/5 hover:bg-primary-200/30 transition-colors cursor-col-resize flex items-center justify-center">
+            <div className="h-8 w-[2px] bg-light-600/30 rounded-full" />
+          </Separator>
+
+          {/* Right: Code Editor & Console */}
+          <Panel defaultSize={60} minSize={30}>
+            <Group orientation="vertical">
+              <Panel defaultSize={70} minSize={20}>
+                <CodeEditor 
+                  value={code}
+                  onChange={(val) => setCode(val || "")}
+                  language={language}
+                  onRun={handleRunCode}
+                />
+              </Panel>
+
+              {isConsoleOpen && (
+                <>
+                  <Separator className="h-1 bg-white/5 hover:bg-primary-200/30 transition-colors cursor-row-resize flex items-center justify-center">
+                    <div className="w-8 h-[2px] bg-light-600/30 rounded-full" />
+                  </Separator>
+                  <Panel defaultSize={30} minSize={10}>
+                    <div className="h-full bg-[#0d0e12] flex flex-col">
+                      <div className="flex items-center justify-between px-4 py-2 bg-dark-300 border-b border-white/5">
+                        <span className="text-[10px] font-bold text-light-600 uppercase tracking-widest leading-none">Console Output</span>
+                        <button 
+                          onClick={() => setIsConsoleOpen(false)}
+                          className="text-light-600 hover:text-white transition-colors"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="flex-1 overflow-auto p-4 font-mono text-sm">
+                        {isExecuting ? (
+                          <div className="flex items-center gap-3 text-light-400">
+                            <div className="size-3 border-2 border-primary-200/30 border-t-primary-200 rounded-full animate-spin" />
+                            <span>Executing code...</span>
+                          </div>
+                        ) : executionResult ? (
+                          <div className="space-y-4">
+                            {executionResult.testCaseResults.map((res: any, idx: number) => (
+                              <div key={idx} className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                                    res.status.id === 3 ? "bg-success-100/10 text-success-100" : "bg-destructive-100/10 text-destructive-100"
+                                  )}>
+                                    {res.status.description}
+                                  </span>
+                                  <span className="text-light-600">Test Case {idx + 1}</span>
+                                  {res.time && <span className="text-[10px] text-light-600">({Math.round(parseFloat(res.time) * 1000)}ms)</span>}
+                                </div>
+                                
+                                {res.stdout && (
+                                  <div className="bg-black/30 p-2 rounded border border-white/5">
+                                    <div className="text-[10px] text-light-600 mb-1 uppercase tracking-tighter">Output:</div>
+                                    <pre className="text-success-100 whitespace-pre-wrap">{res.stdout}</pre>
+                                  </div>
+                                )}
+                                
+                                {res.compile_output && (
+                                  <div className="bg-destructive-100/5 p-2 rounded border border-destructive-100/10">
+                                    <div className="text-[10px] text-destructive-100/60 mb-1 uppercase tracking-tighter">Compile Error:</div>
+                                    <pre className="text-destructive-100 whitespace-pre-wrap">{res.compile_output}</pre>
+                                  </div>
+                                )}
+
+                                {res.stderr && (
+                                  <div className="bg-destructive-100/5 p-2 rounded border border-destructive-100/10">
+                                    <div className="text-[10px] text-destructive-100/60 mb-1 uppercase tracking-tighter">Runtime Error:</div>
+                                    <pre className="text-destructive-100 whitespace-pre-wrap">{res.stderr}</pre>
+                                  </div>
+                                )}
+
+                                {res.status.id !== 3 && !res.compile_output && !res.stderr && (
+                                  <div className="bg-destructive-100/5 p-2 rounded border border-destructive-100/10">
+                                    <div className="text-[10px] text-destructive-100/60 mb-1 uppercase tracking-tighter">Expected Output:</div>
+                                    <pre className="text-light-400 whitespace-pre-wrap">{(challenge.testCases as any)[idx]?.output || "N/A"}</pre>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-light-600 italic">Click "Run" to see execution results.</div>
+                        )}
+                      </div>
+                    </div>
+                  </Panel>
+                </>
+              )}
+            </Group>
+          </Panel>
+        </Group>
+      </div>
+
+      {/* Shortcuts Help Bar */}
+      <footer className="flex items-center justify-between px-6 py-2 bg-[#08090D] text-[10px] text-light-600 font-medium">
+        <div className="flex gap-4">
+          <span>Shortcuts: <kbd className="bg-dark-300 px-1 rounded">Ctrl</kbd> + <kbd className="bg-dark-300 px-1 rounded">Enter</kbd> to Run</span>
+        </div>
+        <div>
+          Powered by Judge0 & PrepWise
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default ChallengeEditorView;

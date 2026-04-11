@@ -54,5 +54,14 @@ export const vi = {
     backHome: "Về lại trang chủ",
     retakeInterview: "Phỏng vấn lại",
     logout: "Đăng xuất",
+    preparation: "Luyện tập",
+  },
+  preparation: {
+    title: "Lộ trình Ôn tập",
+    subtitle: "Rèn luyện kỹ năng qua các bài tập lập trình thực tế",
+    skillTitle: "Kỹ năng Luyện tập",
+    noSkills: "Hiện chưa có kỹ năng nào khả dụng",
+    challenges: "Bài tập",
+    startBtn: "Bắt đầu học",
   },
 };

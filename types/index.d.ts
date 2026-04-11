@@ -1,4 +1,4 @@
-interface Feedback {
+export interface Feedback {
   id: string;
   interviewId: string;
   totalScore: number;
@@ -13,7 +13,7 @@ interface Feedback {
   createdAt: string;
 }
 
-interface Interview {
+export interface Interview {
   id: string;
   role: string;
   level: string;
@@ -26,12 +26,12 @@ interface Interview {
   finalized: boolean;
 }
 
-interface CreateFeedbackParams {
+export interface CreateFeedbackParams {
   interviewId: string;
   transcript: { role: string; content: string }[];
 }
 
-interface User {
+export interface User {
   name: string;
   email: string;
   id: string;
@@ -96,4 +96,31 @@ interface InterviewFormProps {
 
 interface TechIconProps {
   techStack: string[];
+}
+
+export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
+export interface Skill {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  challenges?: Challenge[];
+  _count?: {
+    challenges: number;
+  };
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  difficulty: Difficulty;
+  tags: string[];
+  templateCode: Record<string, string>;
+  testCases: Array<{ input: string; output: string }>;
+  skillId: string;
+  skill?: Skill;
 }

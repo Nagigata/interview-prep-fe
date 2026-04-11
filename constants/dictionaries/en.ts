@@ -51,6 +51,15 @@ export const en = {
   common: {
     backHome: "Back to dashboard",
     retakeInterview: "Retake Interview",
-    logout: "Logout",
-  }
+    logout: "Log out",
+    preparation: "Preparation",
+  },
+  preparation: {
+    title: "Interview Preparation",
+    subtitle: "Sharpen your coding skills with real-world technical challenges",
+    skillTitle: "Practice Skills",
+    noSkills: "No skills available at the moment",
+    challenges: "Challenges",
+    startBtn: "Start Learning",
+  },
 };

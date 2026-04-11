@@ -1,5 +1,6 @@
 "use server";
 
+import { SignInParams, SignUpParams, User } from "@/types";
 import { cookies } from "next/headers";
 
 const API_BASE_URL =
