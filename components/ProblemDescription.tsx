@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import { Challenge } from "@/types";
+import { Tag, Layers } from "lucide-react";
 
 interface ProblemDescriptionProps {
   challenge: Challenge;
@@ -14,21 +15,26 @@ const ProblemDescription = ({ challenge }: ProblemDescriptionProps) => {
         <h1 className="text-3xl font-bold text-white tracking-tight">
           {challenge.title}
         </h1>
-        <div className="flex items-center gap-3 mt-4">
-          <span className={`text-xs font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${
+        <div className="flex flex-wrap items-center gap-3 mt-4">
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded border uppercase tracking-wider ${
             challenge.difficulty === "EASY" ? "text-success-100 border-success-100/20 bg-success-100/10" :
             challenge.difficulty === "MEDIUM" ? "text-orange-400 border-orange-400/20 bg-orange-400/10" :
             "text-destructive-100 border-destructive-100/20 bg-destructive-100/10"
           }`}>
             {challenge.difficulty}
           </span>
-          <div className="flex gap-2">
-            {challenge.tags.map(tag => (
-              <span key={tag} className="text-[10px] text-light-400 border border-white/5 bg-dark-200/50 px-2 py-0.5 rounded-md">
-                #{tag}
-              </span>
-            ))}
+          
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-primary-200/20 bg-primary-200/5 text-primary-200 text-[10px] font-bold uppercase tracking-wider">
+            <Tag size={12} />
+            <span>{challenge.skillLevel}</span>
           </div>
+
+          {challenge.subdomain && (
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-white/5 bg-dark-200 text-light-400 text-[10px] font-bold uppercase tracking-wider">
+              <Layers size={12} />
+              <span>{challenge.subdomain}</span>
+            </div>
+          )}
         </div>
       </div>
 

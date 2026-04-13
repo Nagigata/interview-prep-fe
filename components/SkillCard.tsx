@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Skill } from "@/types";
 import { motion } from "framer-motion";
+import { ChevronRight } from "lucide-react";
 
 interface SkillCardProps {
   skill: Skill;
@@ -12,6 +13,8 @@ interface SkillCardProps {
 }
 
 const SkillCard = ({ skill, dictionary, index }: SkillCardProps) => {
+  const t = dictionary;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -41,7 +44,7 @@ const SkillCard = ({ skill, dictionary, index }: SkillCardProps) => {
 
               <div className="px-3 py-1 bg-primary-200/10 border border-primary-200/20 rounded-full">
                 <span className="text-primary-100 text-xs font-bold uppercase tracking-wider">
-                  {skill._count?.challenges || 0} {dictionary.preparation.challenges}
+                  {skill._count?.challenges || 0} {t.preparation.challenges}
                 </span>
               </div>
             </div>
@@ -57,22 +60,8 @@ const SkillCard = ({ skill, dictionary, index }: SkillCardProps) => {
           </div>
 
           <div className="flex items-center gap-2 text-primary-200 font-bold text-sm mt-4 group-hover:translate-x-1 transition-transform">
-            <span>{dictionary.preparation.startBtn}</span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6 12L10 8L6 4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <span>{t.preparation.startBtn}</span>
+            <ChevronRight size={16} />
           </div>
         </div>
       </Link>

@@ -1,6 +1,6 @@
 "use server";
 
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { Skill, Challenge } from "@/types";
 
 export async function getSkills(): Promise<Skill[] | null> {
@@ -12,11 +12,37 @@ export async function getSkills(): Promise<Skill[] | null> {
   }
 }
 
-export async function getSkillBySlug(slug: string): Promise<Skill | null> {
+export async function getSkillBySlug(
+  slug: string,
+  searchParams?: Record<string, string | string[]>
+): Promise<Skill | null> {
   try {
-    return await apiGet<Skill>(`/challenges/skill/${slug}`);
+    const query = new URLSearchParams();
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => query.append(key, v));
+        } else if (value) {
+          query.append(key, value);
+        }
+      });
+    }
+    const queryString = query.toString();
+    const endpoint = `/challenges/skill/${slug}${queryString ? `?${queryString}` : ""}`;
+    return await apiGet<Skill>(endpoint);
   } catch (error) {
     console.error("Error fetching skill:", error);
+    return null;
+  }
+}
+
+export async function toggleChallengeStar(
+  id: string
+): Promise<{ starred: boolean } | null> {
+  try {
+    return await apiPost<{ starred: boolean }>(`/challenges/${id}/star`);
+  } catch (error) {
+    console.error("Error toggling star:", error);
     return null;
   }
 }

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Challenge } from "@/types";
-import { 
-  Panel, 
-  Group, 
-  Separator 
+import {
+  Panel,
+  Group,
+  Separator
 } from "react-resizable-panels";
 import ProblemDescription from "@/components/ProblemDescription";
 import CodeEditor from "@/components/CodeEditor";
@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
 import { runCode, submitChallenge } from "@/lib/actions/submissions.action";
+import { ChevronLeft, X, Play, Send, RotateCcw } from "lucide-react";
 
 interface ChallengeEditorViewProps {
   challenge: Challenge;
@@ -25,7 +25,7 @@ interface ChallengeEditorViewProps {
 const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEditorViewProps) => {
   const templateCode = challenge.templateCode as Record<string, string>;
   const availableLangs = Object.keys(templateCode);
-  
+
   // States for user interaction
   const [language, setLanguage] = useState<string>(
     availableLangs.includes("python") ? "python" : availableLangs[0]
@@ -96,13 +96,11 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
       {/* Top Header/Toolbar */}
       <header className="flex items-center justify-between px-6 py-3 bg-dark-300 border-b border-white/5 rounded-t-2xl shadow-lg">
         <div className="flex items-center gap-4">
-          <Link 
+          <Link
             href={`/preparation/${skillSlug}`}
             className="p-2 hover:bg-dark-200 rounded-lg transition-colors text-light-400 hover:text-white"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <ChevronLeft size={20} />
           </Link>
           <div className="flex flex-col">
             <span className="text-[10px] text-light-600 uppercase font-bold tracking-widest">{skillSlug}</span>
@@ -111,7 +109,7 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
         </div>
 
         <div className="flex items-center gap-3">
-          <select 
+          <select
             value={language}
             disabled={isExecuting}
             onChange={(e) => {
@@ -120,41 +118,56 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
               setCode(templateCode[newLang] || "");
               setExecutionResult(null);
             }}
-            className="bg-dark-200 text-light-100 text-xs font-bold border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary-200 cursor-pointer disabled:opacity-50"
+            className="bg-dark-200 text-light-100 text-xs font-bold border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary-200 cursor-pointer disabled:opacity-50 h-9"
           >
             {availableLangs.map((lang) => (
               <option key={lang} value={lang} className="capitalize">{lang}</option>
             ))}
           </select>
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             disabled={isExecuting}
             onClick={handleResetCode}
-            className="bg-dark-200 border-white/10 text-light-100 hover:bg-dark-100 hover:text-white"
+            className="bg-dark-200 border-white/10 text-light-100 hover:bg-dark-100 hover:text-white h-9 gap-2"
           >
-            Reset
+            <RotateCcw size={14} />
+            <span>Reset</span>
           </Button>
 
           <div className="h-6 w-px bg-white/5 mx-1" />
 
-          <Button 
+          <Button
             size="sm"
             disabled={isExecuting}
             onClick={handleRunCode}
-            className="bg-primary-200 text-dark-100 hover:bg-primary-200/80 font-bold px-6 min-w-[80px]"
+            className="bg-primary-200 text-dark-100 hover:bg-primary-200/80 font-bold px-6 min-w-[80px] h-9 gap-2"
           >
-            {isExecuting ? <div className="size-4 border-2 border-dark-100/30 border-t-dark-100 rounded-full animate-spin" /> : "Run"}
+            {isExecuting ? (
+              <div className="size-4 border-2 border-dark-100/30 border-t-dark-100 rounded-full animate-spin" />
+            ) : (
+              <>
+                <Play size={14} fill="currentColor" />
+                <span>Run</span>
+              </>
+            )}
           </Button>
-          
-          <Button 
+
+          <Button
             size="sm"
             disabled={isExecuting}
             onClick={handleSubmit}
-            className="bg-success-100 text-white hover:bg-success-200 font-bold px-6 min-w-[100px]"
+            className="bg-success-100 text-white hover:bg-success-200 font-bold px-6 min-w-[100px] h-9 gap-2"
           >
-            {isExecuting ? <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Submit"}
+            {isExecuting ? (
+              <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <Send size={14} />
+                <span>Submit</span>
+              </>
+            )}
           </Button>
         </div>
       </header>
@@ -175,7 +188,7 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
           <Panel defaultSize={60} minSize={30}>
             <Group orientation="vertical">
               <Panel defaultSize={70} minSize={20}>
-                <CodeEditor 
+                <CodeEditor
                   value={code}
                   onChange={(val) => setCode(val || "")}
                   language={language}
@@ -192,16 +205,14 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
                     <div className="h-full bg-[#0d0e12] flex flex-col">
                       <div className="flex items-center justify-between px-4 py-2 bg-dark-300 border-b border-white/5">
                         <span className="text-[10px] font-bold text-light-600 uppercase tracking-widest leading-none">Console Output</span>
-                        <button 
+                        <button
                           onClick={() => setIsConsoleOpen(false)}
-                          className="text-light-600 hover:text-white transition-colors"
+                          className="text-light-600 hover:text-white transition-colors p-1"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M18 6L6 18M6 6l12 12" />
-                          </svg>
+                          <X size={16} />
                         </button>
                       </div>
-                      
+
                       <div className="flex-1 overflow-auto p-4 font-mono text-sm">
                         {isExecuting ? (
                           <div className="flex items-center gap-3 text-light-400">
@@ -222,14 +233,14 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
                                   <span className="text-light-600">Test Case {idx + 1}</span>
                                   {res.time && <span className="text-[10px] text-light-600">({Math.round(parseFloat(res.time) * 1000)}ms)</span>}
                                 </div>
-                                
+
                                 {res.stdout && (
                                   <div className="bg-black/30 p-2 rounded border border-white/5">
                                     <div className="text-[10px] text-light-600 mb-1 uppercase tracking-tighter">Output:</div>
                                     <pre className="text-success-100 whitespace-pre-wrap">{res.stdout}</pre>
                                   </div>
                                 )}
-                                
+
                                 {res.compile_output && (
                                   <div className="bg-destructive-100/5 p-2 rounded border border-destructive-100/10">
                                     <div className="text-[10px] text-destructive-100/60 mb-1 uppercase tracking-tighter">Compile Error:</div>

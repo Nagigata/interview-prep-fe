@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
 import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
+import { InterviewCardProps } from "@/types";
 
 const InterviewCard = async ({
   interviewId,

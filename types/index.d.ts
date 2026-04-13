@@ -118,7 +118,10 @@ export interface Challenge {
   slug: string;
   description: string;
   difficulty: Difficulty;
-  tags: string[];
+  subdomain: string;
+  skillLevel: string;
+  isSolved: boolean;
+  isStarred: boolean;
   templateCode: Record<string, string>;
   testCases: Array<{ input: string; output: string }>;
   skillId: string;

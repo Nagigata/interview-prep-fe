@@ -4,33 +4,33 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Difficulty } from "@/types";
-import { cn } from "@/lib/utils";
+import ChallengeFilters from "@/components/ChallengeFilters";
+import ChallengeCard from "@/components/ChallengeCard";
+
+import { ChevronLeft, CircleAlert } from "lucide-react";
 
 interface Props {
   params: Promise<{ skillSlug: string }>;
+  searchParams: Promise<Record<string, string | string[]>>;
 }
 
-const SkillPage = async ({ params }: Props) => {
+const SkillPage = async ({ params, searchParams }: Props) => {
   const { skillSlug } = await params;
+  const filters = await searchParams;
+  
   const cookieStore = await cookies();
   const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
   const t = getDictionary(locale);
 
-  const skill = await getSkillBySlug(skillSlug);
+  const skill = await getSkillBySlug(skillSlug, filters);
 
   if (!skill) {
     notFound();
   }
 
-  const getDifficultyColor = (difficulty: Difficulty) => {
-    switch (difficulty) {
-      case "EASY": return "text-success-100 bg-success-100/10 border-success-100/20";
-      case "MEDIUM": return "text-orange-400 bg-orange-400/10 border-orange-400/20";
-      case "HARD": return "text-destructive-100 bg-destructive-100/10 border-destructive-100/20";
-      default: return "text-light-400 bg-light-400/10 border-light-400/20";
-    }
-  };
+  // Extract unique subdomains and levels from the currently fetched challenges (or we could fetch all)
+  const subdomains = Array.from(new Set(skill.challenges?.map(c => c.subdomain).filter(Boolean) as string[]));
+  const skillLevels = Array.from(new Set(skill.challenges?.map(c => c.skillLevel).filter(Boolean) as string[]));
 
   return (
     <div className="flex flex-col gap-10">
@@ -40,9 +40,7 @@ const SkillPage = async ({ params }: Props) => {
           href="/preparation"
           className="text-sm text-light-400 hover:text-primary-100 flex items-center gap-2 transition-colors w-fit"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ChevronLeft size={16} />
           {t.common.backHome}
         </Link>
 
@@ -59,57 +57,44 @@ const SkillPage = async ({ params }: Props) => {
         </div>
       </header>
 
-      {/* Challenges List */}
-      <section className="flex flex-col gap-6">
-        <h2 className="text-2xl font-bold text-primary-100">{t.preparation.challenges}</h2>
+      <div className="flex flex-col lg:flex-row gap-10">
+        {/* Challenges List (Left) */}
+        <section className="flex-1 flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-primary-100">{t.preparation.challenges}</h2>
+            <span className="text-sm text-light-400">
+              Showing {skill.challenges?.length || 0} challenges
+            </span>
+          </div>
 
-        <div className="flex flex-col gap-4">
-          {skill.challenges && skill.challenges.length > 0 ? (
-            skill.challenges.map((challenge) => (
-              <Link
-                key={challenge.id}
-                href={`/preparation/${skill.slug}/${challenge.id}`}
-                className="card-border group hover:scale-[1.01] transition-all duration-200"
-              >
-                <div className="card-interview flex flex-row items-center justify-between p-6 min-h-fit gap-4">
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-xl font-bold text-white group-hover:text-primary-100 transition-colors">
-                      {challenge.title}
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <span className={cn(
-                        "text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider",
-                        getDifficultyColor(challenge.difficulty)
-                      )}>
-                        {challenge.difficulty}
-                      </span>
-                      <div className="flex gap-2">
-                        {challenge.tags.map(tag => (
-                          <span key={tag} className="text-[10px] text-light-400 bg-dark-200/50 px-2 py-0.5 rounded border border-white/5">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="size-10 rounded-full bg-primary-200/10 flex items-center justify-center text-primary-200 group-hover:bg-primary-200 group-hover:text-dark-100 transition-all">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
+          <div className="flex flex-col gap-4">
+            {skill.challenges && skill.challenges.length > 0 ? (
+              skill.challenges.map((challenge) => (
+                <ChallengeCard
+                  key={challenge.id}
+                  challenge={challenge}
+                  skillSlug={skill.slug}
+                  dictionary={t}
+                />
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center p-16 bg-dark-200/20 rounded-[2.5rem] border border-dashed border-dark-300">
+                <div className="bg-dark-300/30 p-4 rounded-full mb-4">
+                  <CircleAlert size={32} className="text-light-400" />
                 </div>
-              </Link>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center p-12 bg-dark-200/30 rounded-2xl border border-dashed border-dark-300">
-              <p className="text-light-400 italic">No challenges found for this skill.</p>
-            </div>
-          )}
-        </div>
-      </section>
+                <p className="text-light-100 font-medium">No challenges found</p>
+                <p className="text-sm text-light-400 mt-1">Try adjusting your filters to find what you're looking for.</p>
+                <Link href={`/preparation/${skill.slug}`} className="mt-6 text-primary-200 hover:text-primary-100 font-bold text-sm">
+                  Clear all filters
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Filter Sidebar (Right) */}
+        <ChallengeFilters subdomains={subdomains} skillLevels={skillLevels} />
+      </div>
     </div>
   );
 };
