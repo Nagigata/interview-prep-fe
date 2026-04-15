@@ -97,13 +97,15 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
       <header className="flex items-center justify-between px-6 py-3 bg-dark-300 border-b border-white/5 rounded-t-2xl shadow-lg">
         <div className="flex items-center gap-4">
           <Link
-            href={`/preparation/${skillSlug}`}
+            href={skillSlug === "algorithms" ? "/challenges" : `/preparation/${skillSlug}`}
             className="p-2 hover:bg-dark-200 rounded-lg transition-colors text-light-400 hover:text-white"
           >
             <ChevronLeft size={20} />
           </Link>
           <div className="flex flex-col">
-            <span className="text-[10px] text-light-600 uppercase font-bold tracking-widest">{skillSlug}</span>
+            <span className="text-[10px] text-light-600 uppercase font-bold tracking-widest">
+              {skillSlug === "algorithms" ? "Problem Set" : skillSlug}
+            </span>
             <h2 className="text-sm font-bold text-white leading-none">{challenge.title}</h2>
           </div>
         </div>

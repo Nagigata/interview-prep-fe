@@ -53,6 +53,7 @@ export const en = {
     retakeInterview: "Retake Interview",
     logout: "Log out",
     preparation: "Preparation",
+    challenges: "Challenges",
   },
   preparation: {
     title: "Interview Preparation",

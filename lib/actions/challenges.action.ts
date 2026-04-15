@@ -36,6 +36,29 @@ export async function getSkillBySlug(
   }
 }
 
+export async function getAllChallenges(
+  searchParams?: Record<string, string | string[]>
+): Promise<Challenge[] | null> {
+  try {
+    const query = new URLSearchParams();
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => query.append(key, v));
+        } else if (value) {
+          query.append(key, value);
+        }
+      });
+    }
+    const queryString = query.toString();
+    const endpoint = `/challenges${queryString ? `?${queryString}` : ""}`;
+    return await apiGet<Challenge[]>(endpoint);
+  } catch (error) {
+    console.error("Error fetching library challenges:", error);
+    return null;
+  }
+}
+
 export async function toggleChallengeStar(
   id: string
 ): Promise<{ starred: boolean } | null> {

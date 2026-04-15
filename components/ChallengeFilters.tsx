@@ -39,11 +39,10 @@ const FilterGroup = ({ title, options, selectedValues, onChange }: FilterGroupPr
 );
 
 interface ChallengeFiltersProps {
-  subdomains: string[];
-  skillLevels: string[];
+  topics: string[];
 }
 
-const ChallengeFilters = ({ subdomains, skillLevels }: ChallengeFiltersProps) => {
+const ChallengeFilters = ({ topics }: ChallengeFiltersProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -97,21 +96,12 @@ const ChallengeFilters = ({ subdomains, skillLevels }: ChallengeFiltersProps) =>
           onChange={(val) => handleFilterChange("difficulty", val)}
         />
 
-        {subdomains.length > 0 && (
+        {topics.length > 0 && (
           <FilterGroup
-            title="Subdomains"
-            options={subdomains.map((s) => ({ label: s, value: s }))}
-            selectedValues={getSelectedValues("subdomain")}
-            onChange={(val) => handleFilterChange("subdomain", val)}
-          />
-        )}
-
-        {skillLevels.length > 0 && (
-          <FilterGroup
-            title="Skill Levels"
-            options={skillLevels.map((s) => ({ label: s, value: s }))}
-            selectedValues={getSelectedValues("skillLevel")}
-            onChange={(val) => handleFilterChange("skillLevel", val)}
+            title="Topics"
+            options={topics.map((s) => ({ label: s, value: s }))}
+            selectedValues={getSelectedValues("topics")}
+            onChange={(val) => handleFilterChange("topics", val)}
           />
         )}
       </div>

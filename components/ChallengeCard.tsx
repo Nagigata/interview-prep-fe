@@ -48,25 +48,26 @@ const ChallengeCard = ({ challenge, skillSlug, dictionary }: ChallengeCardProps)
         {/* Left Side: Info */}
         <div className="flex flex-col gap-2.5 flex-1 min-w-0 ">
           <div className="flex flex-col gap-2">
-            <h3 className="text-xl font-bold text-white group-hover:text-primary-100 transition-colors ">
+            {/* Title */}
+            <h3 className="text-xl font-bold text-white group-hover:text-primary-100 transition-colors">
               {challenge.title}
             </h3>
 
             {/* Meta Labels */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={cn(
                 "text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider",
                 getDifficultyColor(challenge.difficulty)
               )}>
                 {formatDifficulty(challenge.difficulty)}
               </span>
-              <span className="text-[10px] text-primary-200 bg-primary-200/5 px-2 py-0.5 rounded border border-primary-200/20 font-medium">
-                {challenge.skillLevel}
-              </span>
-              {challenge.subdomain && (
-                <span className="text-[10px] text-light-400 bg-dark-200 px-2 py-0.5 rounded border border-white/5">
-                  {challenge.subdomain}
+              {challenge.topics && challenge.topics.split(", ").slice(0, 3).map((topic) => (
+                <span key={topic} className="text-[10px] text-light-400 bg-dark-200 px-2 py-0.5 rounded border border-white/5">
+                  {topic}
                 </span>
+              ))}
+              {challenge.topics && challenge.topics.split(", ").length > 3 && (
+                <span className="text-[10px] text-light-600">+{challenge.topics.split(", ").length - 3} more</span>
               )}
             </div>
           </div>

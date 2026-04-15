@@ -43,9 +43,21 @@ const CodeEditor = ({ value, onChange, language, onRun }: CodeEditorProps) => {
   };
 
   // Re-map common language slugs to Monaco identifiers
-  const monacoLanguage = language.toLowerCase() === "python" ? "python" : 
-                         language.toLowerCase() === "javascript" || language.toLowerCase() === "react" ? "javascript" : 
-                         language;
+  const getMonacoLanguage = (lang: string) => {
+    const l = lang.toLowerCase();
+    if (l === "python3" || l === "python") return "python";
+    if (l === "javascript" || l === "react") return "javascript";
+    if (l === "typescript") return "typescript";
+    if (l === "cpp") return "cpp";
+    if (l === "golang") return "go";
+    if (l === "java") return "java";
+    if (l === "c") return "c";
+    if (l === "csharp") return "csharp";
+    if (l === "rust") return "rust";
+    return l;
+  };
+
+  const monacoLanguage = getMonacoLanguage(language);
 
   return (
     <div className="h-full w-full bg-[#08090D] overflow-hidden">

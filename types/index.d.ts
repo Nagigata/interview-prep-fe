@@ -112,14 +112,24 @@ export interface Skill {
   };
 }
 
+export interface LeetCodeExample {
+  example_num: number;
+  example_text: string;
+  images: string[];
+}
+
 export interface Challenge {
   id: string;
   title: string;
   slug: string;
   description: string;
   difficulty: Difficulty;
-  subdomain: string;
-  skillLevel: string;
+  topics: string;
+  examples?: LeetCodeExample[];
+  constraints?: string[];
+  hints?: string[];
+  solution?: string | null;
+  followUps?: string[];
   isSolved: boolean;
   isStarred: boolean;
   templateCode: Record<string, string>;

@@ -55,6 +55,7 @@ export const vi = {
     retakeInterview: "Phỏng vấn lại",
     logout: "Đăng xuất",
     preparation: "Luyện tập",
+    challenges: "Thử thách",
   },
   preparation: {
     title: "Lộ trình Ôn tập",

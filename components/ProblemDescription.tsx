@@ -1,52 +1,167 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
-import { Challenge } from "@/types";
-import { Tag, Layers } from "lucide-react";
+import { Challenge, LeetCodeExample } from "@/types";
+import { Layers, Lightbulb, MoveRight } from "lucide-react";
+import { useState } from "react";
 
 interface ProblemDescriptionProps {
   challenge: Challenge;
 }
 
+const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
+  const styles: Record<string, string> = {
+    EASY: "text-success-100 border-success-100/20 bg-success-100/10",
+    MEDIUM: "text-orange-400 border-orange-400/20 bg-orange-400/10",
+    HARD: "text-destructive-100 border-destructive-100/20 bg-destructive-100/10",
+  };
+  return (
+    <span className={`text-[10px] font-bold px-2.5 py-1 rounded border uppercase tracking-wider ${styles[difficulty] || styles.EASY}`}>
+      {difficulty}
+    </span>
+  );
+};
+
+const ExamplesSection = ({ examples }: { examples: LeetCodeExample[] }) => (
+  <div className="flex flex-col gap-4">
+    {examples.map((ex) => (
+      <div key={ex.example_num} className="rounded-xl border border-white/5 bg-dark-300/50 overflow-hidden">
+        <div className="px-4 py-2 bg-dark-300 border-b border-white/5">
+          <span className="text-xs font-bold text-light-400 uppercase tracking-widest">
+            Example {ex.example_num}
+          </span>
+        </div>
+        <div className="p-4 flex flex-col gap-3">
+          {ex.images && ex.images.length > 0 && ex.images.map((img, i) => (
+            <div key={i} className="relative w-full max-h-48 rounded-lg overflow-hidden bg-dark-200">
+              <img
+                src={img}
+                alt={`Example ${ex.example_num} illustration`}
+                className="object-contain w-full max-h-48"
+              />
+            </div>
+          ))}
+          <pre className="font-mono text-sm text-light-100 whitespace-pre-wrap leading-relaxed bg-dark-200/60 p-3 rounded-lg border border-white/5">
+            {ex.example_text}
+          </pre>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const ConstraintsSection = ({ constraints }: { constraints: string[] }) => (
+  <div className="rounded-xl border border-white/5 bg-dark-300/30 p-4">
+    <h3 className="text-xs font-bold text-light-400 uppercase tracking-widest mb-3">Constraints</h3>
+    <ul className="flex flex-col gap-2">
+      {constraints.map((c, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-light-100">
+          <span className="text-primary-200 mt-0.5 shrink-0">•</span>
+          <code className="font-mono text-xs text-primary-200 bg-dark-300 px-1.5 py-0.5 rounded">{c}</code>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const HintsSection = ({ hints }: { hints: string[] }) => {
+  const [revealedCount, setRevealedCount] = useState(0);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 text-xs font-bold text-light-400 uppercase tracking-widest">
+        <Lightbulb size={12} />
+        <span>Hints</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {hints.map((hint, i) => (
+          <div key={i}>
+            {i < revealedCount ? (
+              <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3 text-sm text-light-100 flex items-start gap-2">
+                <Lightbulb size={14} className="text-yellow-400 shrink-0 mt-0.5" />
+                <span>{hint}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setRevealedCount(i + 1)}
+                className="w-full text-left rounded-lg border border-white/5 bg-dark-300/30 p-3 text-sm text-light-400 hover:text-white hover:bg-dark-300/60 transition-all flex items-center gap-2"
+              >
+                <Lightbulb size={14} className="text-yellow-400/40" />
+                <span>Show Hint {i + 1}</span>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ProblemDescription = ({ challenge }: ProblemDescriptionProps) => {
+  const topics = challenge.topics
+    ? challenge.topics.split(", ").filter(Boolean)
+    : [];
+
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full bg-dark-200/20">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+      {/* Header */}
+      <div className="space-y-3">
+        <h1 className="text-2xl font-bold text-white tracking-tight leading-tight">
           {challenge.title}
         </h1>
-        <div className="flex flex-wrap items-center gap-3 mt-4">
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded border uppercase tracking-wider ${
-            challenge.difficulty === "EASY" ? "text-success-100 border-success-100/20 bg-success-100/10" :
-            challenge.difficulty === "MEDIUM" ? "text-orange-400 border-orange-400/20 bg-orange-400/10" :
-            "text-destructive-100 border-destructive-100/20 bg-destructive-100/10"
-          }`}>
-            {challenge.difficulty}
-          </span>
-          
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-primary-200/20 bg-primary-200/5 text-primary-200 text-[10px] font-bold uppercase tracking-wider">
-            <Tag size={12} />
-            <span>{challenge.skillLevel}</span>
-          </div>
-
-          {challenge.subdomain && (
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-white/5 bg-dark-200 text-light-400 text-[10px] font-bold uppercase tracking-wider">
-              <Layers size={12} />
-              <span>{challenge.subdomain}</span>
-            </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <DifficultyBadge difficulty={challenge.difficulty} />
+          {topics.slice(0, 4).map((topic) => (
+            <span
+              key={topic}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-white/5 bg-dark-200 text-light-400 text-[10px] font-bold uppercase tracking-wider"
+            >
+              <Layers size={10} />
+              {topic}
+            </span>
+          ))}
+          {topics.length > 4 && (
+            <span className="text-[10px] text-light-600">+{topics.length - 4} more</span>
           )}
         </div>
       </div>
 
-      <div className="border-t border-white/5 pt-6">
-        <div className="prose prose-invert max-w-none prose-p:text-light-100 prose-headings:text-white prose-strong:text-primary-100 prose-code:text-primary-200 prose-code:bg-dark-300 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-dark-300 prose-pre:border prose-pre:border-white/5">
-          <ReactMarkdown>
-            {challenge.description}
-          </ReactMarkdown>
-        </div>
+      {/* Description */}
+      <div className="prose prose-invert max-w-none prose-p:text-light-100 prose-p:leading-relaxed prose-headings:text-white prose-strong:text-primary-100 prose-code:text-primary-200 prose-code:bg-dark-300 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-dark-300 prose-pre:border prose-pre:border-white/5 prose-li:text-light-100">
+        <ReactMarkdown>{challenge.description}</ReactMarkdown>
       </div>
-      
-      {/* Footer info or constraints would go here */}
+
+      {/* Examples */}
+      {challenge.examples && challenge.examples.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <ExamplesSection examples={challenge.examples} />
+        </div>
+      )}
+
+      {/* Constraints */}
+      {challenge.constraints && challenge.constraints.length > 0 && (
+        <ConstraintsSection constraints={challenge.constraints} />
+      )}
+
+      {/* Follow-ups */}
+      {challenge.followUps && challenge.followUps.length > 0 && (
+        <div className="rounded-xl border border-primary-200/10 bg-primary-200/5 p-4">
+          <h3 className="text-xs font-bold text-primary-200 uppercase tracking-widest mb-3">Follow-up</h3>
+          <ul className="flex flex-col gap-2">
+            {challenge.followUps.map((f, i) => (
+              <li key={i} className="text-sm text-light-100 flex items-start gap-2">
+                <span className="text-primary-200 shrink-0"><MoveRight size={12} className="mt-1" /></span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Hints */}
+      {challenge.hints && challenge.hints.length > 0 && (
+        <HintsSection hints={challenge.hints} />
+      )}
     </div>
   );
 };

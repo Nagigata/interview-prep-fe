@@ -24,6 +24,13 @@ const Navbar = ({ locale, t }: NavbarProps) => {
           >
             {t.common.preparation}
           </Link>
+
+          <Link
+            href="/challenges"
+            className="text-light-400 hover:text-primary-100 font-medium text-sm transition-all"
+          >
+            {t.common.challenges}
+          </Link>
         </div>
 
         {/* Right side controls */}
