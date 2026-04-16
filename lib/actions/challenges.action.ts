@@ -36,26 +36,40 @@ export async function getSkillBySlug(
   }
 }
 
+interface PaginatedChallenges {
+  data: Challenge[];
+  total: number;
+}
+
 export async function getAllChallenges(
-  searchParams?: Record<string, string | string[]>
-): Promise<Challenge[] | null> {
+  searchParams?: Record<string, string | string[] | number>
+): Promise<PaginatedChallenges | null> {
   try {
     const query = new URLSearchParams();
     if (searchParams) {
       Object.entries(searchParams).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          value.forEach(v => query.append(key, v));
-        } else if (value) {
-          query.append(key, value);
+          value.forEach(v => query.append(key, v.toString()));
+        } else if (value !== undefined && value !== null) {
+          query.append(key, value.toString());
         }
       });
     }
     const queryString = query.toString();
     const endpoint = `/challenges${queryString ? `?${queryString}` : ""}`;
-    return await apiGet<Challenge[]>(endpoint);
+    return await apiGet<PaginatedChallenges>(endpoint);
   } catch (error) {
     console.error("Error fetching library challenges:", error);
     return null;
+  }
+}
+
+export async function getTopics(): Promise<string[]> {
+  try {
+    return await apiGet<string[]>("/challenges/topics/all");
+  } catch (error) {
+    console.error("Error fetching topics:", error);
+    return [];
   }
 }
 

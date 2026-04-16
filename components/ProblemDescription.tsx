@@ -24,11 +24,13 @@ const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
 
 const ExamplesSection = ({ examples }: { examples: LeetCodeExample[] }) => (
   <div className="flex flex-col gap-4">
-    {examples.map((ex) => (
-      <div key={ex.example_num} className="rounded-xl border border-white/5 bg-dark-300/50 overflow-hidden">
+    {examples.map((ex, index) => {
+      const exampleNum = ex.example_num ?? index + 1;
+      return (
+      <div key={`example-${exampleNum}`} className="rounded-xl border border-white/5 bg-dark-300/50 overflow-hidden">
         <div className="px-4 py-2 bg-dark-300 border-b border-white/5">
           <span className="text-xs font-bold text-light-400 uppercase tracking-widest">
-            Example {ex.example_num}
+            Example {exampleNum}
           </span>
         </div>
         <div className="p-4 flex flex-col gap-3">
@@ -36,17 +38,37 @@ const ExamplesSection = ({ examples }: { examples: LeetCodeExample[] }) => (
             <div key={i} className="relative w-full max-h-48 rounded-lg overflow-hidden bg-dark-200">
               <img
                 src={img}
-                alt={`Example ${ex.example_num} illustration`}
+                alt={`Example ${exampleNum} illustration`}
                 className="object-contain w-full max-h-48"
               />
             </div>
           ))}
-          <pre className="font-mono text-sm text-light-100 whitespace-pre-wrap leading-relaxed bg-dark-200/60 p-3 rounded-lg border border-white/5">
-            {ex.example_text}
-          </pre>
+          
+          {ex.example_text ? (
+            <pre className="font-mono text-sm text-light-100 whitespace-pre-wrap leading-relaxed bg-dark-200/60 p-3 rounded-lg border border-white/5">
+              {ex.example_text}
+            </pre>
+          ) : (
+            <div className="flex flex-col gap-2 bg-dark-200/60 p-4 rounded-lg border border-white/5">
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-light-400 font-bold min-w-16">Input:</span>
+                <span className="font-mono text-light-100 break-all">{ex.input}</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm mt-1">
+                <span className="text-light-400 font-bold min-w-16">Output:</span>
+                <span className="font-mono text-light-100 break-all">{ex.output}</span>
+              </div>
+              {ex.explanation && (
+                <div className="flex items-start gap-2 text-sm mt-2 pt-2 border-t border-white/5">
+                  <span className="text-light-400 font-bold min-w-24">Explanation:</span>
+                  <span className="text-light-100/90 leading-relaxed">{ex.explanation}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    ))}
+    )})}
   </div>
 );
 
