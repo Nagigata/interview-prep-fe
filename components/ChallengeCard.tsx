@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Star, Check } from "lucide-react";
 import { Challenge, Difficulty } from "@/types";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ interface ChallengeCardProps {
 }
 
 const ChallengeCard = ({ challenge, skillSlug, dictionary }: ChallengeCardProps) => {
+  const router = useRouter();
   const [isStarred, setIsStarred] = useState(challenge.isStarred);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,7 +45,10 @@ const ChallengeCard = ({ challenge, skillSlug, dictionary }: ChallengeCardProps)
   };
 
   return (
-    <div className="card-border group hover:scale-[1.005] transition-all duration-200 w-full mb-1">
+    <div
+      onClick={() => router.push(`/preparation/${skillSlug}/${challenge.id}`)}
+      className="cursor-pointer card-border group hover:scale-[1.005] transition-all duration-200 w-full mb-1"
+    >
       <div className="card-interview flex flex-row items-center justify-between p-7 gap-8 w-full">
         {/* Left Side: Info */}
         <div className="flex flex-col gap-2.5 flex-1 min-w-0 ">
@@ -103,12 +108,11 @@ const ChallengeCard = ({ challenge, skillSlug, dictionary }: ChallengeCardProps)
               <Check size={16} strokeWidth={3} />
             </div>
           ) : (
-            <Link
-              href={`/preparation/${skillSlug}/${challenge.id}`}
-              className="flex items-center justify-center px-6 py-2.5 rounded-xl bg-primary-200 text-dark-100 font-extrabold text-sm hover:bg-primary-100 transition-all shadow-lg shadow-primary-200/10 min-w-[160px]"
+            <div
+              className="flex items-center justify-center px-6 py-2.5 rounded-xl bg-primary-200 text-dark-100 font-extrabold text-sm group-hover:bg-primary-100 transition-all shadow-lg shadow-primary-200/10 min-w-[160px]"
             >
               Solve Challenge
-            </Link>
+            </div>
           )}
         </div>
       </div>

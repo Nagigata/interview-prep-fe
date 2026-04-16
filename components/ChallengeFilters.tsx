@@ -3,18 +3,20 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FilterGroupProps {
   title: string;
   options: { label: string; value: string }[];
   selectedValues: string[];
   onChange: (value: string) => void;
+  scrollable?: boolean;
 }
 
-const FilterGroup = ({ title, options, selectedValues, onChange }: FilterGroupProps) => (
+const FilterGroup = ({ title, options, selectedValues, onChange, scrollable }: FilterGroupProps) => (
   <div className="flex flex-col gap-4 border-b border-dark-300 pb-6 mb-6 last:border-0 last:pb-0 last:mb-0">
     <h3 className="text-xs font-bold text-light-400 uppercase tracking-widest">{title}</h3>
-    <div className="flex flex-col gap-3">
+    <div className={cn("flex flex-col gap-3", scrollable && "max-h-64 overflow-y-auto px-1 scrollbar scrollbar-w-1 scrollbar-thumb-primary-200/30 hover:scrollbar-thumb-primary-200/60 scrollbar-track-transparent scrollbar-thumb-rounded-full")}>
       {options.map((option) => (
         <label key={option.value} className="flex items-center gap-3 group cursor-pointer">
           <div className="relative flex items-center">
@@ -24,9 +26,9 @@ const FilterGroup = ({ title, options, selectedValues, onChange }: FilterGroupPr
               checked={selectedValues.includes(option.value)}
               onChange={() => onChange(option.value)}
             />
-            <Check 
-              className="absolute size-3.5 left-0.5 text-dark-100 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" 
-              strokeWidth={4} 
+            <Check
+              className="absolute size-3.5 left-0.5 text-dark-100 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+              strokeWidth={4}
             />
           </div>
           <span className="text-sm text-light-100 group-hover:text-white transition-colors">
@@ -51,7 +53,7 @@ const ChallengeFilters = ({ topics }: ChallengeFiltersProps) => {
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
       const currentValues = params.getAll(name);
-      
+
       if (currentValues.includes(value)) {
         const newValues = currentValues.filter((v) => v !== value);
         params.delete(name);
@@ -102,6 +104,7 @@ const ChallengeFilters = ({ topics }: ChallengeFiltersProps) => {
             options={topics.map((s) => ({ label: s, value: s }))}
             selectedValues={getSelectedValues("topics")}
             onChange={(val) => handleFilterChange("topics", val)}
+            scrollable={true}
           />
         )}
       </div>
