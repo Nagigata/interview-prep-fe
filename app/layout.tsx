@@ -1,15 +1,6 @@
 import type { Metadata } from "next";
-import { Mona_Sans, Geist } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
-
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistSans = Mona_Sans({
-  variable: "--font-mona-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "PrepWise",
@@ -23,17 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn(
-        "h-full",
-        "antialiased",
-        "dark",
-        geistSans.variable,
-        "font-sans",
-        geist.variable,
-      )}
-    >
+    <html lang="en" className="h-full antialiased dark">
       <body className="min-h-full flex flex-col pattern">
         {children}
         <Toaster />

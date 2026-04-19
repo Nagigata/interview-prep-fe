@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import Agent from "@/components/Agent";
@@ -7,11 +6,13 @@ import { getCurrentUser } from "@/lib/actions/auth.action";
 import DisplayTechIcons from "@/components/DisplayTechIcons";
 import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
+import { RouteParams } from "@/types";
 
 const InterviewDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
 
   const user = await getCurrentUser();
+  if (!user) redirect("/sign-in");
 
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
@@ -39,8 +40,8 @@ const InterviewDetails = async ({ params }: RouteParams) => {
       </div>
 
       <Agent
-        userName={user?.name!}
-        userId={user?.id}
+        userName={user.name}
+        userId={user.id}
         interviewId={id}
         type="interview"
         questions={interview.questions}

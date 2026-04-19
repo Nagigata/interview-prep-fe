@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
 import Navbar from "@/components/Navbar";
+import { getMyProfile } from "@/lib/actions/user.actions";
 
 const RootLayout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -13,10 +14,11 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
   const cookieStore = await cookies();
   const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
   const t = getDictionary(locale);
+  const profile = await getMyProfile();
 
   return (
     <div className="flex flex-col min-h-screen bg-dark-100">
-      <Navbar locale={locale} t={t} />
+      <Navbar locale={locale} t={t} user={profile} />
 
       {/* Main Content Area - Increased spacing (pt-24) to avoid "stuck" feeling */}
       <main className="flex-1 pt-24 pb-12 w-full max-w-7xl mx-auto px-6 lg:px-8">

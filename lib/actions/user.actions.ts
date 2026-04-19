@@ -1,0 +1,135 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+import { apiGet } from "@/lib/api";
+import {
+  PaginatedResponse,
+  RecentActivityItem,
+  SolvedChallengeItem,
+  StarredChallengeItem,
+  UserProfile,
+} from "@/types";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+
+export async function getMyProfile(): Promise<UserProfile | null> {
+  try {
+    return await apiGet<UserProfile>("/users/me");
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return null;
+  }
+}
+
+export async function getMyStarredChallenges(
+  page = 1,
+  limit = 10,
+): Promise<PaginatedResponse<StarredChallengeItem> | null> {
+  try {
+    return await apiGet<PaginatedResponse<StarredChallengeItem>>(
+      `/users/me/starred?page=${page}&limit=${limit}`,
+    );
+  } catch (error) {
+    console.error("Error fetching starred challenges:", error);
+    return null;
+  }
+}
+
+export async function getMySolvedChallenges(
+  page = 1,
+  limit = 10,
+): Promise<PaginatedResponse<SolvedChallengeItem> | null> {
+  try {
+    return await apiGet<PaginatedResponse<SolvedChallengeItem>>(
+      `/users/me/solved?page=${page}&limit=${limit}`,
+    );
+  } catch (error) {
+    console.error("Error fetching solved challenges:", error);
+    return null;
+  }
+}
+
+export async function getMyRecentActivity(
+  page = 1,
+  limit = 20,
+): Promise<PaginatedResponse<RecentActivityItem> | null> {
+  try {
+    return await apiGet<PaginatedResponse<RecentActivityItem>>(
+      `/users/me/activity?page=${page}&limit=${limit}`,
+    );
+  } catch (error) {
+    console.error("Error fetching recent activity:", error);
+    return null;
+  }
+}
+
+export async function updateMyProfile(formData: FormData) {
+  const token = (await cookies()).get("token")?.value;
+
+  if (!token) {
+    return {
+      success: false,
+      message: "You must be signed in to update your profile.",
+    };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to update profile.",
+      };
+    }
+
+    const nextUser = data.data;
+    const cookieStore = await cookies();
+    const currentUserCookie = cookieStore.get("user")?.value;
+
+    if (currentUserCookie) {
+      try {
+        const currentUser = JSON.parse(currentUserCookie);
+        cookieStore.set("user", JSON.stringify({
+          ...currentUser,
+          name: nextUser.name,
+          avatarUrl: nextUser.avatarUrl ?? null,
+        }), {
+          maxAge: 60 * 60 * 24 * 7,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          sameSite: "lax",
+        });
+      } catch {
+        // Ignore malformed cookie and keep profile updated via API.
+      }
+    }
+
+    revalidatePath("/");
+    revalidatePath("/profile");
+    revalidatePath("/interview");
+
+    return {
+      success: true,
+      data: nextUser as UserProfile,
+    };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return {
+      success: false,
+      message: "Failed to update profile.",
+    };
+  }
+}

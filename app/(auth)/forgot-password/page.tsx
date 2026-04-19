@@ -132,7 +132,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <div className="flex justify-center items-center h-full">
-      <div className="card-border lg:min-w-[480px]">
+      <div className="card-border lg:min-w-120">
         <div className="flex flex-col gap-6 card py-14 px-10">
           {/* Logo */}
           <div className="flex flex-row gap-2 justify-center">

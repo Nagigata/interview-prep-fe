@@ -133,7 +133,7 @@ const Agent = ({
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
-        router.push("/");
+        router.push("/interview");
       } else {
         handleGenerateFeedback(messages);
       }

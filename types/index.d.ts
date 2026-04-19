@@ -35,6 +35,8 @@ export interface User {
   name: string;
   email: string;
   id: string;
+  avatarUrl?: string | null;
+  createdAt?: string;
 }
 
 interface InterviewCardProps {
@@ -54,10 +56,13 @@ interface AgentProps {
   type: "generate" | "interview";
   language?: string;
   questions?: string[];
-  dictionary?: any;
+  dictionary?: {
+    [key: string]: unknown;
+    agent?: Record<string, string>;
+  };
 }
 
-interface RouteParams {
+export interface RouteParams {
   params: Promise<Record<string, string>>;
   searchParams: Promise<Record<string, string>>;
 }
@@ -116,6 +121,9 @@ export interface LeetCodeExample {
   example_num: number;
   example_text: string;
   images: string[];
+  input?: string;
+  output?: string;
+  explanation?: string;
 }
 
 export interface Challenge {
@@ -136,4 +144,87 @@ export interface Challenge {
   testCases: Array<{ input: string; output: string }>;
   skillId: string;
   skill?: Skill;
+}
+
+export interface DifficultyProgressItem {
+  solved: number;
+  total: number;
+}
+
+export interface ActivityDay {
+  date: string;
+  count: number;
+  level: number;
+}
+
+export interface RecentActivityItem {
+  id: string;
+  challengeId: string;
+  challengeTitle: string;
+  difficulty: Difficulty;
+  language: string;
+  status: string;
+  runtime?: number | null;
+  memory?: number | null;
+  submittedAt: string;
+}
+
+export interface UserDashboardStats {
+  totalStarredChallenges: number;
+  totalSolvedChallenges: number;
+  totalSubmissions: number;
+  acceptedSubmissions: number;
+  acceptanceRate: number;
+  totalInterviews: number;
+  attemptedChallenges: number;
+  attemptingChallenges: number;
+  activeDays: number;
+  currentStreak: number;
+  maxStreak: number;
+  difficultyProgress: {
+    easy: DifficultyProgressItem;
+    medium: DifficultyProgressItem;
+    hard: DifficultyProgressItem;
+  };
+}
+
+export interface UserProfile extends User {
+  stats: UserDashboardStats;
+  activityCalendar: ActivityDay[];
+  recentActivity: RecentActivityItem[];
+}
+
+export interface StarredChallengeItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  difficulty: Difficulty;
+  topics: string;
+  skillSlug: string;
+  skillName: string;
+  isSolved: boolean;
+  isStarred: boolean;
+  starredAt: string;
+}
+
+export interface SolvedChallengeItem {
+  challengeId: string;
+  title: string;
+  slug: string;
+  difficulty: Difficulty;
+  topics: string;
+  skillSlug: string;
+  skillName: string;
+  language: string;
+  solvedAt: string;
+  status: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
