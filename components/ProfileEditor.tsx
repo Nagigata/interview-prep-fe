@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useMemo, useState, useTransition } from "react";
+import dayjs from "dayjs";
 import { Camera, Loader2, PencilLine } from "lucide-react";
 
 import { updateMyProfile } from "@/lib/actions/user.actions";
@@ -21,6 +22,13 @@ const ProfileEditor = ({ profile }: ProfileEditorProps) => {
   const [isPending, startTransition] = useTransition();
 
   const avatarUrl = useMemo(() => previewUrl || currentProfile.avatarUrl, [previewUrl, currentProfile.avatarUrl]);
+  const joinedDate = useMemo(
+    () =>
+      currentProfile.createdAt
+        ? dayjs(currentProfile.createdAt).format("DD/MM/YYYY")
+        : "",
+    [currentProfile.createdAt],
+  );
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -58,7 +66,7 @@ const ProfileEditor = ({ profile }: ProfileEditorProps) => {
   };
 
   return (
-    <section className="rounded-[28px] border border-white/8 bg-[#1d1f24] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
+    <section className="rounded-[28px] border border-white/8 bg-[radial-gradient(circle_at_top_left,_rgba(92,114,255,0.12),_transparent_36%),linear-gradient(135deg,#1d1f24_0%,#12151b_100%)] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-5">
           <div className="relative">
@@ -93,7 +101,7 @@ const ProfileEditor = ({ profile }: ProfileEditorProps) => {
             )}
             <p className="mt-2 text-light-100">{currentProfile.email}</p>
             <p className="mt-1 text-sm text-light-400">
-              Joined {new Date(currentProfile.createdAt || "").toLocaleDateString()}
+              Joined {joinedDate}
             </p>
           </div>
         </div>

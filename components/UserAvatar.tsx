@@ -22,6 +22,10 @@ const UserAvatar = ({
   size = "md",
   className,
 }: UserAvatarProps) => {
+  const isLocalAvatar =
+    avatarUrl?.startsWith("http://localhost:3001/") ||
+    avatarUrl?.startsWith("http://127.0.0.1:3001/");
+
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -42,6 +46,7 @@ const UserAvatar = ({
           src={avatarUrl}
           alt={name}
           fill
+          unoptimized={isLocalAvatar}
           className="object-cover"
           sizes="(max-width: 768px) 96px, 128px"
         />

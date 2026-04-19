@@ -78,7 +78,7 @@ const AuthForm = ({ type, dictionary: t }: { type: FormType, dictionary?: any })
         }
 
         toast.success(t?.auth?.signInSuccess || "Signed in successfully!");
-        router.push("/");
+        router.push("/preparation");
       }
     } catch (error) {
       console.error(error);

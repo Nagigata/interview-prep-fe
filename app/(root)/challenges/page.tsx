@@ -19,7 +19,6 @@ const ChallengesLibraryPage = async ({ searchParams }: Props) => {
   const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
   const t = getDictionary(locale);
 
-  // Safely get all unique topics via dedicated lightweight API (Prevents OOM)
   const topics = await getTopics();
 
   // Fetch only the first 100 items (Page 1)

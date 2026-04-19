@@ -44,7 +44,7 @@ const RecentActivityTable = ({
                 <tr key={item.id} className="border-t border-white/8 bg-[#1d1f24]">
                   <td className="px-4 py-3">
                     <Link
-                      href={`/challenges`}
+                      href="/submissions"
                       className="font-medium text-white hover:text-primary-100"
                     >
                       {item.challengeTitle}

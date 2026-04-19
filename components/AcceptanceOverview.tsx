@@ -1,6 +1,5 @@
 "use client";
 
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Check } from "lucide-react";
 
 import { UserDashboardStats } from "@/types";
@@ -13,71 +12,126 @@ const difficultyConfig = [
   {
     key: "easy",
     label: "Easy",
-    accentClass: "text-[#49de50]",
+    trackColor: "rgba(73, 222, 80, 0.22)",
+    fillColor: "#49de50",
+    accentClass: "text-success-100",
   },
   {
     key: "medium",
     label: "Med.",
-    accentClass: "text-[#f59e0b]",
+    trackColor: "rgba(251, 146, 60, 0.22)",
+    fillColor: "#f59e0b",
+    accentClass: "text-orange-400",
   },
   {
     key: "hard",
     label: "Hard",
-    accentClass: "text-[#ef4444]",
+    trackColor: "rgba(247, 83, 83, 0.22)",
+    fillColor: "#f75353",
+    accentClass: "text-destructive-100",
   },
 ] as const;
 
+const polarToCartesian = (cx: number, cy: number, radius: number, angleInDegrees: number) => {
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
+  return {
+    x: cx + radius * Math.cos(angleInRadians),
+    y: cy + radius * Math.sin(angleInRadians),
+  };
+};
+
+const describeArc = (
+  cx: number,
+  cy: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+) => {
+  const start = polarToCartesian(cx, cy, radius, endAngle);
+  const end = polarToCartesian(cx, cy, radius, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+  return [
+    "M",
+    start.x,
+    start.y,
+    "A",
+    radius,
+    radius,
+    0,
+    largeArcFlag,
+    0,
+    end.x,
+    end.y,
+  ].join(" ");
+};
+
 const AcceptanceOverview = ({ stats }: AcceptanceOverviewProps) => {
-  const chartData = [
-    { name: "segment-easy", value: 1, fill: "#7b6617" },
-    { name: "segment-medium", value: 1, fill: "#0f5960" },
-    { name: "segment-hard", value: 1, fill: "#6a2d31" },
-  ];
   const totalChallenges =
     stats.difficultyProgress.easy.total +
     stats.difficultyProgress.medium.total +
     stats.difficultyProgress.hard.total;
 
+  const segments = [
+    { start: 210, end: 300, ...difficultyConfig[0] },
+    { start: 310, end: 410, ...difficultyConfig[1] },
+    { start: 60, end: 150, ...difficultyConfig[2] },
+  ] as const;
+
   return (
     <section className="flex h-full rounded-[32px] border border-white/8 bg-[#1d1f24] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
       <div className="grid w-full items-center gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="relative flex min-h-[280px] items-center justify-center rounded-[24px]  px-4 py-5">
-          <div className="absolute inset-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  startAngle={210}
-                  endAngle={-30}
-                  innerRadius="72%"
-                  outerRadius="82%"
-                  cornerRadius={10}
-                  paddingAngle={10}
-                  stroke="none"
-                >
-                  {chartData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.fill} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="relative flex min-h-[300px] items-center justify-center rounded-[24px] px-4 py-5">
+          <svg
+            viewBox="0 0 260 260"
+            className="h-[260px] w-[260px]"
+            aria-label="Acceptance overview"
+          >
+            {segments.map((segment) => {
+              const progress =
+                stats.difficultyProgress[
+                  segment.key as keyof typeof stats.difficultyProgress
+                ];
+              const ratio = progress.total > 0 ? progress.solved / progress.total : 0;
+              const fillEnd = segment.start + (segment.end - segment.start) * ratio;
 
-          <div className="relative z-10 flex flex-col items-center justify-center text-center">
+              return (
+                <g key={segment.key}>
+                  <path
+                    d={describeArc(130, 130, 92, segment.start, segment.end)}
+                    fill="none"
+                    stroke={segment.trackColor}
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                  />
+                  {ratio > 0 ? (
+                    <path
+                      d={describeArc(130, 130, 92, segment.start, fillEnd)}
+                      fill="none"
+                      stroke={segment.fillColor}
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                    />
+                  ) : null}
+                </g>
+              );
+            })}
+          </svg>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center pt-1 text-center">
             <div className="flex items-baseline gap-1">
-              <p className="text-5xl font-bold text-white">
+              <p className="text-4xl font-bold text-white">
                 {stats.totalSolvedChallenges}
               </p>
-              <p className="text-xl font-semibold text-light-400">
+              <p className="text-lg font-semibold text-light-400">
                 /{totalChallenges}
               </p>
             </div>
             <div className="mt-2 flex items-center gap-2 text-light-100">
               <Check className="size-4 text-[#49de50]" />
-              <span className="text-xl">Solved</span>
+              <span className="text-lg">Solved</span>
             </div>
-            <p className="mt-6 text-sm text-light-400">
+            <p className="mt-5 text-sm text-light-400">
               {stats.attemptingChallenges} Attempting
             </p>
           </div>
