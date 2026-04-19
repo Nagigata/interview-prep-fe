@@ -24,11 +24,13 @@ const ChallengeEditorPage = async ({ params }: Props) => {
   const dictionary = getDictionary(locale);
 
   return (
-    <ChallengeEditorView 
-      challenge={challenge}
-      dictionary={dictionary}
-      skillSlug={skillSlug}
-    />
+    <div className="fixed inset-x-0 bottom-0 top-16 z-40 bg-dark-100">
+      <ChallengeEditorView
+        challenge={challenge}
+        dictionary={dictionary}
+        skillSlug={skillSlug}
+      />
+    </div>
   );
 };
 

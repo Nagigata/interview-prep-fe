@@ -7,6 +7,8 @@ interface RecentActivityTableProps {
   items: RecentActivityItem[];
   title?: string;
   compact?: boolean;
+  actionHref?: string;
+  actionLabel?: string;
 }
 
 const statusClasses: Record<string, string> = {
@@ -20,12 +22,24 @@ const RecentActivityTable = ({
   items,
   title = "Recent Activity",
   compact = false,
+  actionHref,
+  actionLabel,
 }: RecentActivityTableProps) => {
   return (
     <section className="rounded-[28px] border border-white/8 bg-[#1d1f24] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-xl font-semibold text-white">{title}</h3>
-        {!compact && <span className="text-sm text-light-400">{items.length} items</span>}
+        <div className="flex items-center gap-4">
+          {!compact && <span className="text-sm text-light-400">{items.length} items</span>}
+          {actionHref && actionLabel ? (
+            <Link
+              href={actionHref}
+              className="text-sm font-semibold text-primary-200 hover:text-primary-100"
+            >
+              {actionLabel}
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/8">
@@ -44,7 +58,7 @@ const RecentActivityTable = ({
                 <tr key={item.id} className="border-t border-white/8 bg-[#1d1f24]">
                   <td className="px-4 py-3">
                     <Link
-                      href="/submissions"
+                      href={`/preparation/${item.skillSlug || "algorithms"}/${item.challengeId}`}
                       className="font-medium text-white hover:text-primary-100"
                     >
                       {item.challengeTitle}

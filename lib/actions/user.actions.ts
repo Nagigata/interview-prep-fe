@@ -27,10 +27,25 @@ export async function getMyProfile(): Promise<UserProfile | null> {
 export async function getMyStarredChallenges(
   page = 1,
   limit = 10,
+  filters?: Record<string, string | string[]>,
 ): Promise<PaginatedResponse<StarredChallengeItem> | null> {
   try {
+    const query = new URLSearchParams();
+    query.append("page", page.toString());
+    query.append("limit", limit.toString());
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((entry) => query.append(key, entry));
+        } else if (value) {
+          query.append(key, value);
+        }
+      });
+    }
+
     return await apiGet<PaginatedResponse<StarredChallengeItem>>(
-      `/users/me/starred?page=${page}&limit=${limit}`,
+      `/users/me/starred?${query.toString()}`,
     );
   } catch (error) {
     console.error("Error fetching starred challenges:", error);

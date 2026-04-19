@@ -1,7 +1,11 @@
 "use client";
 
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 import { ActivityCalendar } from "react-activity-calendar";
 import { ActivityDay } from "@/types";
+
+dayjs.extend(advancedFormat);
 
 interface ActivityHeatmapProps {
   activity: ActivityDay[];
@@ -18,6 +22,30 @@ const ActivityHeatmap = ({
 
   return (
     <section className="rounded-[28px] border border-white/8 bg-[#1d1f24] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
+      <style jsx global>{`
+        .react-activity-calendar__tooltip {
+          padding: 6px 10px !important;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px !important;
+          background: rgba(18, 21, 27, 0.96) !important;
+          color: #f5f7ff !important;
+          font-size: 11px !important;
+          line-height: 1.4;
+          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+          backdrop-filter: blur(12px);
+        }
+
+        .react-activity-calendar__tooltip[data-color-scheme='dark'] {
+          background: rgba(18, 21, 27, 0.96) !important;
+          color: #f5f7ff !important;
+        }
+
+        .react-activity-calendar__tooltip-arrow,
+        .react-activity-calendar__tooltip[data-color-scheme='dark'] .react-activity-calendar__tooltip-arrow {
+          fill: rgba(18, 21, 27, 0.96) !important;
+        }
+      `}</style>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-lg text-light-100">
           <span className="text-2xl font-semibold text-white">{submissionCount}</span>{" "}
@@ -43,16 +71,23 @@ const ActivityHeatmap = ({
             blockMargin={5}
             blockRadius={3}
             fontSize={13}
-            showWeekdayLabels={false}
+            showWeekdayLabels={true}
             weekStart={0}
             theme={{
               dark: ["#2b2d31", "#0e5e54", "#148f67", "#20b36f", "#49de50"],
             }}
             labels={{
+              weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
               totalCount: "{{count}} submissions in the past one year",
               legend: {
                 less: "Less",
                 more: "More",
+              },
+            }}
+            tooltips={{
+              activity: {
+                text: (activityDay) =>
+                  `${activityDay.count} ${activityDay.count === 1 ? "submission" : "submissions"} on ${dayjs(activityDay.date).format("dddd, Do MMMM YYYY")}`,
               },
             }}
           />

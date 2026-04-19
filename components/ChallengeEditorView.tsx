@@ -92,9 +92,9 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] -mt-6">
+    <div className="flex h-full flex-col">
       {/* Top Header/Toolbar */}
-      <header className="flex items-center justify-between px-6 py-3 bg-dark-300 border-b border-white/5 rounded-t-2xl shadow-lg">
+      <header className="flex items-center justify-between border-b border-white/5 bg-dark-300 px-6 py-3 shadow-lg">
         <div className="flex items-center gap-4">
           <Link
             href={skillSlug === "algorithms" ? "/challenges" : `/preparation/${skillSlug}`}
@@ -175,7 +175,7 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
       </header>
 
       {/* Main Resizable Layout */}
-      <div className="flex-1 overflow-hidden relative border-x border-b border-white/5 rounded-b-2xl shadow-2xl bg-dark-400">
+      <div className="relative flex-1 overflow-hidden border-b border-white/5 bg-dark-400 shadow-2xl">
         <Group orientation="horizontal">
           {/* Left: Problem Description */}
           <Panel defaultSize={40} minSize={30}>
@@ -280,7 +280,7 @@ const ChallengeEditorView = ({ challenge, dictionary, skillSlug }: ChallengeEdit
       </div>
 
       {/* Shortcuts Help Bar */}
-      <footer className="flex items-center justify-between px-6 py-2 bg-[#08090D] text-[10px] text-light-600 font-medium">
+      <footer className="flex items-center justify-between bg-[#08090D] px-6 py-2 text-[10px] font-medium text-light-600">
         <div className="flex gap-4">
           <span>Shortcuts: <kbd className="bg-dark-300 px-1 rounded">Ctrl</kbd> + <kbd className="bg-dark-300 px-1 rounded">Enter</kbd> to Run</span>
         </div>

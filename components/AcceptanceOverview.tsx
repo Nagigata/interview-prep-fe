@@ -3,9 +3,11 @@
 import { Check } from "lucide-react";
 
 import { UserDashboardStats } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface AcceptanceOverviewProps {
   stats: UserDashboardStats;
+  className?: string;
 }
 
 const difficultyConfig = [
@@ -34,9 +36,10 @@ const difficultyConfig = [
 
 const polarToCartesian = (cx: number, cy: number, radius: number, angleInDegrees: number) => {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
+  const roundCoordinate = (value: number) => Number(value.toFixed(4));
   return {
-    x: cx + radius * Math.cos(angleInRadians),
-    y: cy + radius * Math.sin(angleInRadians),
+    x: roundCoordinate(cx + radius * Math.cos(angleInRadians)),
+    y: roundCoordinate(cy + radius * Math.sin(angleInRadians)),
   };
 };
 
@@ -66,7 +69,7 @@ const describeArc = (
   ].join(" ");
 };
 
-const AcceptanceOverview = ({ stats }: AcceptanceOverviewProps) => {
+const AcceptanceOverview = ({ stats, className }: AcceptanceOverviewProps) => {
   const totalChallenges =
     stats.difficultyProgress.easy.total +
     stats.difficultyProgress.medium.total +
@@ -79,7 +82,7 @@ const AcceptanceOverview = ({ stats }: AcceptanceOverviewProps) => {
   ] as const;
 
   return (
-    <section className="flex h-full rounded-[32px] border border-white/8 bg-[#1d1f24] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
+    <div className={cn("flex h-full", className)}>
       <div className="grid w-full items-center gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="relative flex min-h-[300px] items-center justify-center rounded-[24px] px-4 py-5">
           <svg
@@ -160,7 +163,7 @@ const AcceptanceOverview = ({ stats }: AcceptanceOverviewProps) => {
           })}
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

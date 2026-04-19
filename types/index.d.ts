@@ -162,6 +162,7 @@ export interface RecentActivityItem {
   challengeId: string;
   challengeTitle: string;
   difficulty: Difficulty;
+  skillSlug: string;
   language: string;
   status: string;
   runtime?: number | null;
