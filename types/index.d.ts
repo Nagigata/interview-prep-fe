@@ -52,6 +52,7 @@ interface InterviewCardProps {
 interface AgentProps {
   userName: string;
   userId?: string;
+  userAvatarUrl?: string | null;
   interviewId?: string;
   type: "generate" | "interview";
   language?: string;

@@ -117,18 +117,25 @@ const InterviewCard = async ({
             <DisplayTechIcons techStack={techstack} />
           </div>
 
-          <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
-            <Link
-              href={
-                feedback
-                  ? `/interview/${interviewId}/feedback`
-                  : `/interview/${interviewId}`
-              }
-              className="px-6 flex items-center justify-center w-full h-full"
-            >
-              {feedback ? t.interviewCard.viewFeedback : t.interviewCard.startInterview}
-            </Link>
-          </Button>
+          {feedback ? (
+            <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
+              <Link
+                href={`/interview/${interviewId}/feedback`}
+                className="px-6 flex items-center justify-center w-full h-full"
+              >
+                {t.interviewCard.viewFeedback}
+              </Link>
+            </Button>
+          ) : (
+            <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
+              <Link
+                href={`/interview/${interviewId}`}
+                className="px-6 flex items-center justify-center w-full h-full"
+              >
+                {t.interviewCard.startInterview}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -33,56 +33,6 @@ const ProfilePage = async () => {
     <div className="flex flex-col gap-8">
       <ProfileEditor profile={profile} />
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-[28px] border border-emerald-400/10 bg-[linear-gradient(135deg,rgba(73,222,80,0.12),rgba(29,31,36,0.96)_45%)] p-5 shadow-[0_12px_35px_rgba(0,0,0,0.28)]">
-          <p className="text-sm uppercase tracking-[0.28em] text-emerald-300/80">Solved Challenges</p>
-          <div className="mt-4 flex items-end justify-between gap-4">
-            <p className="text-4xl font-bold text-white">
-              {profile.stats.totalSolvedChallenges}
-            </p>
-            <p className="text-sm text-light-300">
-              {profile.stats.acceptedSubmissions} accepted submissions
-            </p>
-          </div>
-          <div className="mt-5 h-2 rounded-full bg-white/8">
-            <div
-              className="h-full rounded-full bg-[#49de50]"
-              style={{
-                width: `${Math.min(profile.stats.acceptanceRate || 0, 100)}%`,
-              }}
-            />
-          </div>
-        </div>
-        <div className="rounded-[28px] border border-primary-200/10 bg-[linear-gradient(135deg,rgba(92,114,255,0.16),rgba(29,31,36,0.96)_45%)] p-5 shadow-[0_12px_35px_rgba(0,0,0,0.28)]">
-          <p className="text-sm uppercase tracking-[0.28em] text-primary-100/80">Current Streak</p>
-          <div className="mt-4 flex items-end justify-between gap-4">
-            <p className="text-4xl font-bold text-white">
-              {profile.stats.currentStreak}
-            </p>
-            <p className="text-sm text-light-300">
-              {profile.stats.maxStreak} longest streak
-            </p>
-          </div>
-          <p className="mt-5 text-sm text-light-200">
-            {profile.stats.activeDays} active days in the last year
-          </p>
-        </div>
-        <div className="rounded-[28px] border border-amber-400/10 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(29,31,36,0.96)_45%)] p-5 shadow-[0_12px_35px_rgba(0,0,0,0.28)]">
-          <p className="text-sm uppercase tracking-[0.28em] text-amber-300/80">Interviews</p>
-          <div className="mt-4 flex items-end justify-between gap-4">
-            <p className="text-4xl font-bold text-white">
-              {profile.stats.totalInterviews}
-            </p>
-            <p className="text-sm text-light-300">
-              {profile.stats.attemptingChallenges} challenges in progress
-            </p>
-          </div>
-          <p className="mt-5 text-sm text-light-200">
-            Build momentum across coding practice and AI mock interview sessions.
-          </p>
-        </div>
-      </section>
-
       <section className="rounded-[32px] border border-white/8 bg-[radial-gradient(circle_at_top_left,_rgba(92,114,255,0.12),_transparent_36%),linear-gradient(135deg,#1d1f24_0%,#12151b_100%)] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.28)]">
         <p className="text-sm uppercase tracking-[0.35em] text-light-400">
           Progress

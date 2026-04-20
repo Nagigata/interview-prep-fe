@@ -103,7 +103,7 @@ const ChallengeFilters = ({ topics }: ChallengeFiltersProps) => {
 
   return (
     <aside className="w-64 shrink-0 hidden lg:block">
-      <div className="sticky top-28 bg-dark-200/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 flex flex-col gap-6">
+      <div className="sticky top-28 rounded-3xl border border-white/5 bg-dark-200/50 p-6 backdrop-blur-xl">
         
         <FilterGroup
           title="Status"

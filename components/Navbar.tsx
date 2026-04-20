@@ -77,11 +77,17 @@ const Navbar = ({ locale, t, user }: NavbarProps) => {
 
         {/* Right side controls */}
         <div className="flex items-center gap-4">
-          <div className="hidden items-center gap-2 rounded-xl border border-white/10 bg-dark-200 px-3 py-2 md:flex">
-            <Flame className="size-4 text-[#f59e0b]" />
-            <span className="text-sm font-semibold text-white">
-              {user?.stats.currentStreak ?? 0}
-            </span>
+          <div className="group relative hidden md:block">
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-dark-200 px-3 py-2">
+              <Flame className="size-4 text-[#f59e0b]" />
+              <span className="text-sm font-semibold text-white">
+                {user?.stats.currentStreak ?? 0}
+              </span>
+            </div>
+
+            <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/10 bg-[#171a20] px-3 py-1.5 text-xs font-medium text-light-100 opacity-0 shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+              {user?.stats.currentStreak ?? 0} Streaks
+            </div>
           </div>
           <UserMenu currentLocale={locale} user={user} />
         </div>

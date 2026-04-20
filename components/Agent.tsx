@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer_en, interviewer_vi } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
+import UserAvatar from "./UserAvatar";
 import { ChevronDown, Mic, Phone, PhoneOff, Settings, Volume2 } from "lucide-react";
-import Avatar from "boring-avatars";
 import { AgentProps } from "@/types";
 
 
@@ -36,6 +36,7 @@ interface Message {
 const Agent = ({
   userName,
   userId,
+  userAvatarUrl,
   interviewId,
   type,
   questions,
@@ -79,7 +80,16 @@ const Agent = ({
     };
 
     const onError = (error: Error) => {
-      console.log("Error:", error);
+      const message = error?.message || "";
+
+      if (
+        message.includes("Meeting has ended") ||
+        message.includes("ejection")
+      ) {
+        return;
+      }
+
+      console.error("Vapi error:", error);
     };
 
     vapi.on("call-start", onCallStart);
@@ -314,14 +324,12 @@ const Agent = ({
             {/* User Profile Card */}
             <div className="flex flex-col gap-6 justify-center items-center p-10 bg-dark-200 border border-dark-300 rounded-3xl shadow-2xl flex-1 min-h-[450px] z-10 relative">
               <div className="relative p-2 rounded-full border-2 border-dashed border-light-600">
-                <div className="rounded-full overflow-hidden w-[140px] h-[140px] border border-light-400">
-                  <Avatar
-                    size={140}
-                    name={userName || "User"}
-                    variant="marble"
-                    colors={["#49de50", "#10b981", "#3b82f6", "#6366f1", "#0f172a"]}
-                  />
-                </div>
+                <UserAvatar
+                  name={userName || "User"}
+                  avatarUrl={userAvatarUrl}
+                  size="xl"
+                  className="border border-light-400"
+                />
               </div>
               <h3 className="mt-4 truncate w-full text-center px-4" title={userName}>
                 {userName}
