@@ -110,7 +110,6 @@ const ChallengeFilters = ({ topics }: ChallengeFiltersProps) => {
           options={[
             { label: "Solved", value: "SOLVED" },
             { label: "Unsolved", value: "UNSOLVED" },
-            { label: "Starred", value: "STARRED" },
           ]}
           selectedValues={getSelectedValues("status")}
           onChange={(val) => handleFilterChange("status", val)}

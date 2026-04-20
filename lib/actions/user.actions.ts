@@ -9,6 +9,7 @@ import {
   RecentActivityItem,
   SolvedChallengeItem,
   StarredChallengeItem,
+  Skill,
   UserProfile,
 } from "@/types";
 
@@ -77,6 +78,17 @@ export async function getMyRecentActivity(
     );
   } catch (error) {
     console.error("Error fetching recent activity:", error);
+    return null;
+  }
+}
+
+export async function getMyRecommendedSkills(
+  limit = 3,
+): Promise<Skill[] | null> {
+  try {
+    return await apiGet<Skill[]>(`/users/me/recommended-skills?limit=${limit}`);
+  } catch (error) {
+    console.error("Error fetching recommended skills:", error);
     return null;
   }
 }
