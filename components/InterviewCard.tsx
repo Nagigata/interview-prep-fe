@@ -120,7 +120,7 @@ const InterviewCard = async ({
           {feedback ? (
             <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
               <Link
-                href={`/interview/${interviewId}/feedback`}
+                href={`/interview/${interviewId}/feedback${feedback?.attemptId ? `?attemptId=${feedback.attemptId}` : ""}`}
                 className="px-6 flex items-center justify-center w-full h-full"
               >
                 {t.interviewCard.viewFeedback}

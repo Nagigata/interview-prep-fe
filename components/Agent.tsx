@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer_en, interviewer_vi } from "@/constants";
-import { createFeedback } from "@/lib/actions/general.action";
+import { createFeedback, createInterviewAttempt } from "@/lib/actions/general.action";
 import UserAvatar from "./UserAvatar";
 import { ChevronDown, Mic, Phone, PhoneOff, Settings, Volume2 } from "lucide-react";
 import { AgentProps } from "@/types";
@@ -38,6 +38,7 @@ const Agent = ({
   userId,
   userAvatarUrl,
   interviewId,
+  initialAttemptId,
   type,
   questions,
   language,
@@ -51,6 +52,7 @@ const Agent = ({
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [attemptId, setAttemptId] = useState<string | null>(initialAttemptId ?? null);
   const langMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -125,15 +127,20 @@ const Agent = ({
 
     const handleGenerateFeedback = async (messages: SavedMessage[]) => {
       console.log("handleGenerateFeedback");
+      if (!attemptId) {
+        console.log("Missing interview attempt");
+        router.push("/");
+        return;
+      }
 
       setIsGenerating(true);
       const { success, feedbackId: id } = await createFeedback({
-        interviewId: interviewId!,
+        attemptId,
         transcript: messages,
       });
 
       if (success && id) {
-        router.push(`/interview/${interviewId}/feedback`);
+        router.push(`/interview/${interviewId}/feedback?attemptId=${attemptId}`);
       } else {
         console.log("Error saving feedback");
         setIsGenerating(false);
@@ -148,7 +155,7 @@ const Agent = ({
         handleGenerateFeedback(messages);
       }
     }
-  }, [messages, callStatus, interviewId, router, type, userId]);
+  }, [attemptId, messages, callStatus, interviewId, router, type, userId]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -166,6 +173,13 @@ const Agent = ({
         },
       });
     } else {
+      const nextAttempt = await createInterviewAttempt(interviewId!);
+      if (!nextAttempt) {
+        setCallStatus(CallStatus.INACTIVE);
+        return;
+      }
+
+      setAttemptId(nextAttempt.id);
       const activeInterviewer = language === "vi" ? interviewer_vi : interviewer_en;
 
       let formattedQuestions = "";

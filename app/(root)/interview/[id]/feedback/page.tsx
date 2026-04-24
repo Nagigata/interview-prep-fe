@@ -4,6 +4,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import {
+  getFeedbackByAttemptId,
   getFeedbackByInterviewId,
   getInterviewById,
 } from "@/lib/actions/general.action";
@@ -11,20 +12,35 @@ import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
-import { RouteParams } from "@/types";
 
-const Feedback = async ({ params }: RouteParams) => {
+const Feedback = async ({
+  params,
+  searchParams,
+}: {
+  params: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) => {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const attemptId =
+    typeof resolvedSearchParams.attemptId === "string"
+      ? resolvedSearchParams.attemptId
+      : undefined;
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
-  const feedback = await getFeedbackByInterviewId({
-    interviewId: id,
-    userId: user.id,
-  });
+  const feedback = attemptId
+    ? await getFeedbackByAttemptId({
+      attemptId,
+      userId: user.id,
+    })
+    : await getFeedbackByInterviewId({
+      interviewId: id,
+      userId: user.id,
+    });
 
   const cookieStore = await cookies();
   const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";

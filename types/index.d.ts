@@ -1,5 +1,6 @@
 export interface Feedback {
   id: string;
+  attemptId: string;
   interviewId: string;
   totalScore: number;
   categoryScores: Array<{
@@ -27,8 +28,17 @@ export interface Interview {
 }
 
 export interface CreateFeedbackParams {
-  interviewId: string;
+  attemptId: string;
   transcript: { role: string; content: string }[];
+}
+
+export interface InterviewAttempt {
+  id: string;
+  interviewId: string;
+  userId: string;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface User {
@@ -39,7 +49,7 @@ export interface User {
   createdAt?: string;
 }
 
-interface InterviewCardProps {
+export interface InterviewCardProps {
   interviewId?: string;
   userId?: string;
   role: string;
@@ -49,11 +59,12 @@ interface InterviewCardProps {
   language?: string;
 }
 
-interface AgentProps {
+export interface AgentProps {
   userName: string;
   userId?: string;
   userAvatarUrl?: string | null;
   interviewId?: string;
+  initialAttemptId?: string | null;
   type: "generate" | "interview";
   language?: string;
   questions?: string[];
@@ -68,12 +79,17 @@ export interface RouteParams {
   searchParams: Promise<Record<string, string>>;
 }
 
-interface GetFeedbackByInterviewIdParams {
+export interface GetFeedbackByInterviewIdParams {
   interviewId: string;
   userId: string;
 }
 
-interface GetLatestInterviewsParams {
+export interface GetFeedbackByAttemptIdParams {
+  attemptId: string;
+  userId: string;
+}
+
+export interface GetLatestInterviewsParams {
   userId: string;
   limit?: number;
 }

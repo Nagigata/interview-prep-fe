@@ -5,16 +5,18 @@ import {
   CreateFeedbackParams, 
   Feedback, 
   Interview, 
+  InterviewAttempt,
+  GetFeedbackByAttemptIdParams,
   GetFeedbackByInterviewIdParams, 
   GetLatestInterviewsParams 
 } from "@/types";
 
 export async function createFeedback(params: CreateFeedbackParams) {
-  const { interviewId, transcript } = params;
+  const { attemptId, transcript } = params;
 
   try {
     const feedback = await apiPost<Feedback>("/feedbacks", {
-      interviewId,
+      attemptId,
       transcript,
     });
 
@@ -40,6 +42,28 @@ export async function getFeedbackByInterviewId(
 
   try {
     return await apiGet<Feedback>(`/feedbacks/interview/${interviewId}`);
+  } catch {
+    return null;
+  }
+}
+
+export async function getFeedbackByAttemptId(
+  params: GetFeedbackByAttemptIdParams,
+): Promise<Feedback | null> {
+  const { attemptId } = params;
+
+  try {
+    return await apiGet<Feedback>(`/feedbacks/attempt/${attemptId}`);
+  } catch {
+    return null;
+  }
+}
+
+export async function createInterviewAttempt(
+  interviewId: string,
+): Promise<InterviewAttempt | null> {
+  try {
+    return await apiPost<InterviewAttempt>(`/interviews/${interviewId}/attempts`);
   } catch {
     return null;
   }
