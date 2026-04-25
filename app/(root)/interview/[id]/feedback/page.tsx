@@ -125,6 +125,17 @@ const Feedback = async ({
           </Link>
         </Button>
 
+        <Button className="btn-secondary flex-1">
+          <Link
+            href={`/interview/${id}/attempts`}
+            className="flex w-full justify-center"
+          >
+            <p className="text-sm font-semibold text-primary-200 text-center">
+              {t.interviewCard.viewAttempts}
+            </p>
+          </Link>
+        </Button>
+
         <Button className="btn-primary flex-1">
           <Link
             href={`/interview/${id}`}

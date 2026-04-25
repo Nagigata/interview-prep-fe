@@ -34,6 +34,7 @@ export const en = {
     questions: "questions",
     startInterview: "Start Interview",
     viewFeedback: "View Feedback",
+    viewAttempts: "View Attempt History",
     feedback: "Feedback",
     mockInterview: "Mock Interview",
     notTakenMsg: "You haven't taken this interview yet. Take it now to improve your skills.",

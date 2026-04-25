@@ -118,14 +118,34 @@ const InterviewCard = async ({
           </div>
 
           {feedback ? (
-            <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
-              <Link
-                href={`/interview/${interviewId}/feedback${feedback?.attemptId ? `?attemptId=${feedback.attemptId}` : ""}`}
-                className="px-6 flex items-center justify-center w-full h-full"
-              >
-                {t.interviewCard.viewFeedback}
-              </Link>
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
+                <Link
+                  href={`/interview/${interviewId}/feedback${feedback?.attemptId ? `?attemptId=${feedback.attemptId}` : ""}`}
+                  className="px-4 flex items-center justify-center w-full h-full text-center"
+                >
+                  {t.interviewCard.viewFeedback}
+                </Link>
+              </Button>
+
+              <Button className="w-full bg-dark-200 text-primary-200 border border-primary-200/40 hover:bg-dark-300 rounded-lg font-bold min-h-12 transition-all">
+                <Link
+                  href={`/interview/${interviewId}`}
+                  className="px-4 flex items-center justify-center w-full h-full text-center"
+                >
+                  {t.common.retakeInterview}
+                </Link>
+              </Button>
+
+              <Button className="col-span-2 w-full bg-transparent text-light-100 border border-white/10 hover:bg-white/5 rounded-lg font-bold min-h-12 transition-all">
+                <Link
+                  href={`/interview/${interviewId}/attempts`}
+                  className="px-4 flex items-center justify-center w-full h-full text-center"
+                >
+                  {t.interviewCard.viewAttempts}
+                </Link>
+              </Button>
+            </div>
           ) : (
             <Button className="w-full bg-primary-200 text-dark-100 hover:bg-primary-200/80 rounded-lg font-bold min-h-12 transition-all">
               <Link

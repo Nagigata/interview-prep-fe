@@ -6,6 +6,7 @@ import {
   Feedback, 
   Interview, 
   InterviewAttempt,
+  InterviewAttemptDetail,
   GetFeedbackByAttemptIdParams,
   GetFeedbackByInterviewIdParams, 
   GetLatestInterviewsParams 
@@ -64,6 +65,26 @@ export async function createInterviewAttempt(
 ): Promise<InterviewAttempt | null> {
   try {
     return await apiPost<InterviewAttempt>(`/interviews/${interviewId}/attempts`);
+  } catch {
+    return null;
+  }
+}
+
+export async function getInterviewAttempts(
+  interviewId: string,
+): Promise<InterviewAttempt[] | null> {
+  try {
+    return await apiGet<InterviewAttempt[]>(`/interviews/${interviewId}/attempts`);
+  } catch {
+    return null;
+  }
+}
+
+export async function getInterviewAttemptById(
+  attemptId: string,
+): Promise<InterviewAttemptDetail | null> {
+  try {
+    return await apiGet<InterviewAttemptDetail>(`/interviews/attempts/${attemptId}`);
   } catch {
     return null;
   }

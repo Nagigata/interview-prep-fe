@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import TimezoneCookie from "@/components/TimezoneCookie";
 
 export const metadata: Metadata = {
   title: "PrepWise",
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased dark">
       <body className="min-h-full flex flex-col pattern">
+        <TimezoneCookie />
         {children}
         <Toaster />
       </body>

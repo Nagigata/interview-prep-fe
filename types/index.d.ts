@@ -32,6 +32,15 @@ export interface CreateFeedbackParams {
   transcript: { role: string; content: string }[];
 }
 
+export interface Transcript {
+  id: string;
+  attemptId: string;
+  role: string;
+  content: string;
+  sequence: number;
+  createdAt: string;
+}
+
 export interface InterviewAttempt {
   id: string;
   interviewId: string;
@@ -39,6 +48,13 @@ export interface InterviewAttempt {
   completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  transcriptCount?: number;
+  feedback?: Feedback | null;
+}
+
+export interface InterviewAttemptDetail extends InterviewAttempt {
+  interview: Interview;
+  transcripts: Transcript[];
 }
 
 export interface User {

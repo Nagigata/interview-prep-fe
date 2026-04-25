@@ -12,11 +12,21 @@ async function getAuthToken(): Promise<string | null> {
   }
 }
 
+async function getUserTimezone(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get("USER_TIMEZONE")?.value || null;
+  } catch {
+    return null;
+  }
+}
+
 async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
   const token = await getAuthToken();
+  const timezone = await getUserTimezone();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -25,6 +35,10 @@ async function apiFetch<T>(
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (timezone) {
+    headers["x-timezone"] = timezone;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {

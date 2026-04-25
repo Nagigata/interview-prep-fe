@@ -35,6 +35,7 @@ export const vi = {
     questions: "câu hỏi",
     startInterview: "Bắt đầu",
     viewFeedback: "Xem Đánh Giá",
+    viewAttempts: "Xem lịch sử làm bài",
     feedback: "Phản hồi",
     mockInterview: "Phỏng vấn",
     notTakenMsg:

@@ -128,6 +128,7 @@ const page = async () => {
             latestInterviews.map((interview) => (
               <InterviewCard
                 key={interview.id}
+                userId={user.id}
                 interviewId={interview.id}
                 role={interview.role}
                 type={interview.type}
