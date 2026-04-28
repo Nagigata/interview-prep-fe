@@ -16,15 +16,27 @@ const sizeClasses = {
   xl: "size-28 text-4xl",
 };
 
+const BACKEND_ORIGIN =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, "") ||
+  "http://localhost:3001";
+
+function resolveAvatarUrl(url?: string | null): string | null {
+  if (!url) return null;
+  // Relative path from backend → prepend backend origin
+  if (url.startsWith("/uploads/")) return `${BACKEND_ORIGIN}${url}`;
+  return url;
+}
+
 const UserAvatar = ({
   name,
   avatarUrl,
   size = "md",
   className,
 }: UserAvatarProps) => {
+  const resolvedUrl = resolveAvatarUrl(avatarUrl);
   const isLocalAvatar =
-    avatarUrl?.startsWith("http://localhost:3001/") ||
-    avatarUrl?.startsWith("http://127.0.0.1:3001/");
+    resolvedUrl?.startsWith("http://localhost:") ||
+    resolvedUrl?.startsWith("http://127.0.0.1:");
 
   const initials = name
     .split(" ")
@@ -41,9 +53,9 @@ const UserAvatar = ({
         className,
       )}
     >
-      {avatarUrl ? (
+      {resolvedUrl ? (
         <Image
-          src={avatarUrl}
+          src={resolvedUrl}
           alt={name}
           fill
           unoptimized={isLocalAvatar}

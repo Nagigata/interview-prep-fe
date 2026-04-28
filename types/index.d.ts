@@ -61,6 +61,7 @@ export interface User {
   name: string;
   email: string;
   id: string;
+  role?: string;
   avatarUrl?: string | null;
   createdAt?: string;
 }

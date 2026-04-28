@@ -79,3 +79,7 @@ export async function apiPatch<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
 }
+
+export async function apiDelete<T>(endpoint: string): Promise<T> {
+  return apiFetch<T>(endpoint, { method: "DELETE" });
+}

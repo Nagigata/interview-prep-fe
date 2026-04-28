@@ -10,6 +10,7 @@ import {
   Globe2,
   LogOut,
   ReceiptText,
+  Shield,
   UserCircle2,
 } from "lucide-react";
 
@@ -140,6 +141,16 @@ const UserMenu = ({ currentLocale, user }: UserMenuProps) => {
                 </Link>
               );
             })}
+            {user?.role === "ADMIN" && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-amber-400 transition hover:bg-amber-500/10"
+              >
+                <Shield className="size-4" />
+                <span>Admin Panel</span>
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-white/8 px-4 py-3">
