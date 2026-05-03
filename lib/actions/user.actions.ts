@@ -16,7 +16,15 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
+async function hasAuthToken() {
+  return Boolean((await cookies()).get("token")?.value);
+}
+
 export async function getMyProfile(): Promise<UserProfile | null> {
+  if (!(await hasAuthToken())) {
+    return null;
+  }
+
   try {
     return await apiGet<UserProfile>("/users/me");
   } catch (error) {
@@ -30,6 +38,10 @@ export async function getMyStarredChallenges(
   limit = 10,
   filters?: Record<string, string | string[]>,
 ): Promise<PaginatedResponse<StarredChallengeItem> | null> {
+  if (!(await hasAuthToken())) {
+    return null;
+  }
+
   try {
     const query = new URLSearchParams();
     query.append("page", page.toString());
@@ -58,6 +70,10 @@ export async function getMySolvedChallenges(
   page = 1,
   limit = 10,
 ): Promise<PaginatedResponse<SolvedChallengeItem> | null> {
+  if (!(await hasAuthToken())) {
+    return null;
+  }
+
   try {
     return await apiGet<PaginatedResponse<SolvedChallengeItem>>(
       `/users/me/solved?page=${page}&limit=${limit}`,
@@ -72,6 +88,10 @@ export async function getMyRecentActivity(
   page = 1,
   limit = 20,
 ): Promise<PaginatedResponse<RecentActivityItem> | null> {
+  if (!(await hasAuthToken())) {
+    return null;
+  }
+
   try {
     return await apiGet<PaginatedResponse<RecentActivityItem>>(
       `/users/me/activity?page=${page}&limit=${limit}`,
@@ -85,6 +105,10 @@ export async function getMyRecentActivity(
 export async function getMyRecommendedSkills(
   limit = 3,
 ): Promise<Skill[] | null> {
+  if (!(await hasAuthToken())) {
+    return null;
+  }
+
   try {
     return await apiGet<Skill[]>(`/users/me/recommended-skills?limit=${limit}`);
   } catch (error) {

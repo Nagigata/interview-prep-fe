@@ -2,15 +2,16 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  ArrowLeft,
   CalendarDays,
   FileText,
   History,
   MessageSquareText,
   RotateCcw,
   Star,
+  Clock,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
   getInterviewAttempts,
@@ -53,41 +54,75 @@ const AttemptsPage = async ({
   const cookieStore = await cookies();
   const timeZone = cookieStore.get("USER_TIMEZONE")?.value || "UTC";
 
+  const bestScore =
+    attempts
+      ?.map((a) => a.feedback?.totalScore ?? 0)
+      .reduce((max, s) => Math.max(max, s), 0) || 0;
+
   return (
     <section className="flex flex-col gap-8">
-      <div className="relative overflow-hidden rounded-[32px] border border-white/8 bg-[radial-gradient(circle_at_top_left,_rgba(202,197,254,0.16),_transparent_34%),linear-gradient(135deg,#1d1f24_0%,#11141a_100%)] p-7 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      {/* Back link */}
+      <Link
+        href="/interview"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-primary-100 hover:text-primary-200 transition-colors w-fit"
+      >
+        <ArrowLeft size={16} />
+        Back to Interviews
+      </Link>
+
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-[28px] border border-white/8 bg-[radial-gradient(circle_at_top_left,_rgba(202,197,254,0.16),_transparent_34%),linear-gradient(135deg,#1d1f24_0%,#11141a_100%)] p-7 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary-200/20 bg-primary-200/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-primary-100">
               <History size={14} />
               Attempt History
             </div>
-            <h1 className="mt-4 text-4xl font-bold capitalize text-white">
+            <h1 className="mt-4 text-3xl font-bold capitalize text-white sm:text-4xl">
               {interview.role} Interview
             </h1>
-            <p className="mt-3 max-w-2xl text-light-100">
-              Review every time you took this interview, compare scores, and reopen the feedback for each attempt.
+            <p className="mt-3 max-w-2xl text-sm text-light-400">
+              Review every time you took this interview, compare scores, and
+              reopen the feedback for each attempt.
             </p>
           </div>
 
-          <Button className="btn-primary">
-            <Link href={`/interview/${id}`} className="flex items-center gap-2">
-              <RotateCcw size={16} />
-              Retake Interview
-            </Link>
-          </Button>
+          {/* Stats */}
+          <div className="flex gap-3">
+            <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-5 py-4 text-center">
+              <div className="text-2xl font-bold text-white">
+                {attempts?.length || 0}
+              </div>
+              <div className="text-[11px] text-light-400 mt-1">Attempts</div>
+            </div>
+            {bestScore > 0 && (
+              <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.05] px-5 py-4 text-center">
+                <div className="text-2xl font-bold text-emerald-400">
+                  {bestScore}
+                </div>
+                <div className="text-[11px] text-light-400 mt-1">
+                  Best Score
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {!attempts || attempts.length === 0 ? (
-        <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-8 text-center">
+        <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-10 text-center">
+          <Clock size={40} className="mx-auto text-light-600 mb-4" />
           <p className="text-lg font-semibold text-white">No attempts yet</p>
-          <p className="mt-2 text-light-400">
+          <p className="mt-2 text-sm text-light-400">
             Start this interview once and your result will appear here.
           </p>
-          <Button className="btn-primary mt-5">
-            <Link href={`/interview/${id}`}>Start Interview</Link>
-          </Button>
+          <Link
+            href={`/interview/${id}`}
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-200 px-5 py-3 text-sm font-bold text-dark-100 transition-colors hover:bg-primary-200/80"
+          >
+            <RotateCcw size={16} />
+            Start Interview
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -97,68 +132,93 @@ const AttemptsPage = async ({
               attempt.completedAt || attempt.createdAt,
               timeZone,
             );
+            const attemptNumber = attempts.length - index;
+            const attemptScore = feedback?.totalScore ?? 0;
+            const scoreColor =
+              attemptScore >= 80
+                ? "text-emerald-400"
+                : attemptScore >= 50
+                  ? "text-amber-400"
+                  : attemptScore > 0
+                    ? "text-red-400"
+                    : "text-light-400";
 
             return (
               <article
                 key={attempt.id}
-                className="rounded-[28px] border border-white/8 bg-[#171a20] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.18)]"
+                className="group rounded-2xl border border-white/6 bg-[#171a20] p-5 transition-all duration-200 hover:border-white/10 hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)]"
               >
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="space-y-3">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex-1 space-y-3">
+                    {/* Attempt header */}
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="rounded-full bg-primary-200 px-3 py-1 text-sm font-extrabold text-dark-100">
-                        Attempt #{attempts.length - index}
+                      <span className="rounded-lg bg-primary-200 px-3 py-1 text-xs font-extrabold text-dark-100">
+                        #{attemptNumber}
                       </span>
-                      <span className="inline-flex items-center gap-2 text-sm text-light-300">
-                        <CalendarDays size={16} />
+                      <span className="inline-flex items-center gap-1.5 text-xs text-light-400">
+                        <CalendarDays size={13} />
                         {displayDate}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-xs font-bold ${scoreColor}`}
+                      >
+                        <Star size={13} />
+                        {feedback
+                          ? `${feedback.totalScore}/100`
+                          : "No score"}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-xs text-light-400">
+                        <MessageSquareText size={13} />
+                        {attempt.transcriptCount || 0} messages
                       </span>
                     </div>
 
-                    <p className="line-clamp-2 max-w-3xl text-light-100">
+                    {/* Assessment preview */}
+                    <p className="line-clamp-2 text-sm text-light-100 leading-relaxed">
                       {feedback?.finalAssessment ||
                         "This attempt has not generated feedback yet."}
                     </p>
-
-                    <div className="flex flex-wrap gap-4 text-sm text-light-400">
-                      <span className="inline-flex items-center gap-2">
-                        <Star size={16} />
-                        {feedback ? `${feedback.totalScore}/100` : "No score"}
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <MessageSquareText size={16} />
-                        {attempt.transcriptCount || 0} transcript messages
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button className="bg-dark-200 text-primary-200 border border-primary-200/40 hover:bg-dark-300">
-                      <Link
-                        href={`/interview/${id}/attempts/${attempt.id}`}
-                        className="flex items-center gap-2"
-                      >
-                        <FileText size={16} />
-                        View Transcript
-                      </Link>
-                    </Button>
-
+                  {/* Actions */}
+                  <div className="flex gap-2 shrink-0">
+                    <Link
+                      href={`/interview/${id}/attempts/${attempt.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-light-100 transition-colors hover:bg-white/5"
+                    >
+                      <FileText size={14} />
+                      Transcript
+                    </Link>
                     {feedback ? (
-                      <Button className="bg-primary-200 text-dark-100 hover:bg-primary-200/80">
-                        <Link href={`/interview/${id}/feedback?attemptId=${attempt.id}`}>
-                          View Feedback
-                        </Link>
-                      </Button>
+                      <Link
+                        href={`/interview/${id}/feedback?attemptId=${attempt.id}`}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-200 px-4 py-2.5 text-xs font-bold text-dark-100 transition-colors hover:bg-primary-200/80"
+                      >
+                        View Feedback
+                      </Link>
                     ) : (
-                      <Button disabled className="bg-dark-300 text-light-400">
-                        Feedback Pending
-                      </Button>
+                      <span className="inline-flex items-center gap-2 rounded-xl bg-dark-300 px-4 py-2.5 text-xs font-medium text-light-600">
+                        Pending
+                      </span>
                     )}
                   </div>
                 </div>
               </article>
             );
           })}
+        </div>
+      )}
+
+      {/* Bottom action */}
+      {attempts && attempts.length > 0 && (
+        <div className="flex justify-center pb-4">
+          <Link
+            href={`/interview/${id}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-200 px-6 py-3 text-sm font-bold text-dark-100 transition-colors hover:bg-primary-200/80"
+          >
+            <RotateCcw size={16} />
+            Retake Interview
+          </Link>
         </div>
       )}
     </section>

@@ -2,13 +2,38 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { BrainCircuit, Mic2, Sparkles } from "lucide-react";
 
-import InterviewCard from "@/components/InterviewCard";
+import InterviewTabs from "@/components/InterviewTabs";
 import { getDictionary } from "@/lib/i18n";
 import { getMyProfile } from "@/lib/actions/user.actions";
 import {
   getInterviewsByUserId,
   getLatestInterviews,
+  getAttemptedInterviews,
+  getFeedbackByInterviewId,
+  getInterviewAttempts,
 } from "@/lib/actions/general.action";
+import { Feedback, Interview } from "@/types";
+
+async function buildFeedbackAndAttemptMaps(
+  interviews: Interview[],
+  userId: string,
+) {
+  const feedbackMap: Record<string, Feedback | null> = {};
+  const attemptCountMap: Record<string, number> = {};
+
+  await Promise.all(
+    interviews.map(async (interview) => {
+      const [feedback, attempts] = await Promise.all([
+        getFeedbackByInterviewId({ interviewId: interview.id, userId }),
+        getInterviewAttempts(interview.id),
+      ]);
+      feedbackMap[interview.id] = feedback;
+      attemptCountMap[interview.id] = attempts?.length || 0;
+    }),
+  );
+
+  return { feedbackMap, attemptCountMap };
+}
 
 const page = async () => {
   const user = await getMyProfile();
@@ -17,10 +42,27 @@ const page = async () => {
     return null;
   }
 
-  const [myInterviews, latestInterviews] = await Promise.all([
-    getInterviewsByUserId(user.id),
-    getLatestInterviews({ userId: user.id, limit: 6 }),
-  ]);
+  const [myInterviews, latestInterviews, attemptedInterviews] =
+    await Promise.all([
+      getInterviewsByUserId(user.id),
+      getLatestInterviews({ userId: user.id, limit: 20 }),
+      getAttemptedInterviews(),
+    ]);
+
+  // Collect all unique interviews for feedback/attempt lookup
+  const allInterviews = [
+    ...(myInterviews || []),
+    ...(attemptedInterviews || []),
+    ...(latestInterviews || []),
+  ];
+  const uniqueInterviews = Array.from(
+    new Map(allInterviews.map((i) => [i.id, i])).values(),
+  );
+
+  const { feedbackMap, attemptCountMap } = await buildFeedbackAndAttemptMaps(
+    uniqueInterviews,
+    user.id,
+  );
 
   const cookieStore = await cookies();
   const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
@@ -78,69 +120,18 @@ const page = async () => {
       </section>
 
       <section
-        className="flex flex-col gap-5 animate-fadeIn"
+        className="animate-fadeIn"
         style={{ animationDelay: "0.08s", animationFillMode: "both" }}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-white">
-            {t.home.yourInterviews}
-          </h2>
-          <span className="text-sm text-light-400">
-            {myInterviews?.length || 0} sessions
-          </span>
-        </div>
-
-        <div className="interviews-section">
-          {myInterviews && myInterviews.length > 0 ? (
-            myInterviews.slice(0, 6).map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-                language={interview.language}
-              />
-            ))
-          ) : (
-            <p className="text-light-400">{t.home.noPastInterviews}</p>
-          )}
-        </div>
-      </section>
-
-      <section
-        className="flex flex-col gap-5 animate-fadeIn"
-        style={{ animationDelay: "0.16s", animationFillMode: "both" }}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-white">
-            {t.home.takeInterviews}
-          </h2>
-          <span className="text-sm text-light-400">
-            {latestInterviews?.length || 0} sessions
-          </span>
-        </div>
-
-        <div className="interviews-section">
-          {latestInterviews && latestInterviews.length > 0 ? (
-            latestInterviews.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-                language={interview.language}
-              />
-            ))
-          ) : (
-            <p className="text-light-400">{t.home.noUpcomingInterviews}</p>
-          )}
-        </div>
+        <InterviewTabs
+          userId={user.id}
+          myInterviews={myInterviews || []}
+          attemptedInterviews={attemptedInterviews || []}
+          latestInterviews={latestInterviews || []}
+          feedbackMap={feedbackMap}
+          attemptCountMap={attemptCountMap}
+          locale={locale}
+        />
       </section>
     </div>
   );

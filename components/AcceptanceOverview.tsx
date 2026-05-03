@@ -14,23 +14,23 @@ const difficultyConfig = [
   {
     key: "easy",
     label: "Easy",
-    trackColor: "rgba(73, 222, 80, 0.22)",
-    fillColor: "#49de50",
-    accentClass: "text-success-100",
+    trackColor: "rgba(52, 211, 153, 0.18)",
+    fillColor: "#34d399",
+    accentClass: "text-emerald-400",
   },
   {
     key: "medium",
     label: "Med.",
-    trackColor: "rgba(251, 146, 60, 0.22)",
-    fillColor: "#f59e0b",
-    accentClass: "text-orange-400",
+    trackColor: "rgba(251, 191, 36, 0.18)",
+    fillColor: "#fbbf24",
+    accentClass: "text-amber-400",
   },
   {
     key: "hard",
     label: "Hard",
-    trackColor: "rgba(247, 83, 83, 0.22)",
-    fillColor: "#f75353",
-    accentClass: "text-destructive-100",
+    trackColor: "rgba(248, 113, 113, 0.18)",
+    fillColor: "#f87171",
+    accentClass: "text-red-400",
   },
 ] as const;
 
@@ -131,7 +131,7 @@ const AcceptanceOverview = ({ stats, className }: AcceptanceOverviewProps) => {
               </p>
             </div>
             <div className="mt-2 flex items-center gap-2 text-light-100">
-              <Check className="size-4 text-[#49de50]" />
+              <Check className="size-4 text-emerald-400" />
               <span className="text-lg">Solved</span>
             </div>
             <p className="mt-5 text-sm text-light-400">

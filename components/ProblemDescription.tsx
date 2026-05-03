@@ -11,9 +11,9 @@ interface ProblemDescriptionProps {
 
 const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
   const styles: Record<string, string> = {
-    EASY: "text-success-100 border-success-100/20 bg-success-100/10",
-    MEDIUM: "text-orange-400 border-orange-400/20 bg-orange-400/10",
-    HARD: "text-destructive-100 border-destructive-100/20 bg-destructive-100/10",
+    EASY: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
+    MEDIUM: "bg-amber-500/15 text-amber-300 border-amber-500/20",
+    HARD: "bg-red-500/15 text-red-300 border-red-500/20",
   };
   return (
     <span className={`text-[10px] font-bold px-2.5 py-1 rounded border uppercase tracking-wider ${styles[difficulty] || styles.EASY}`}>
@@ -27,48 +27,49 @@ const ExamplesSection = ({ examples }: { examples: LeetCodeExample[] }) => (
     {examples.map((ex, index) => {
       const exampleNum = ex.example_num ?? index + 1;
       return (
-      <div key={`example-${exampleNum}`} className="rounded-xl border border-white/5 bg-dark-300/50 overflow-hidden">
-        <div className="px-4 py-2 bg-dark-300 border-b border-white/5">
-          <span className="text-xs font-bold text-light-400 uppercase tracking-widest">
-            Example {exampleNum}
-          </span>
-        </div>
-        <div className="p-4 flex flex-col gap-3">
-          {ex.images && ex.images.length > 0 && ex.images.map((img, i) => (
-            <div key={i} className="relative w-full max-h-48 rounded-lg overflow-hidden bg-dark-200">
-              <img
-                src={img}
-                alt={`Example ${exampleNum} illustration`}
-                className="object-contain w-full max-h-48"
-              />
-            </div>
-          ))}
-          
-          {ex.example_text ? (
-            <pre className="font-mono text-sm text-light-100 whitespace-pre-wrap leading-relaxed bg-dark-200/60 p-3 rounded-lg border border-white/5">
-              {ex.example_text}
-            </pre>
-          ) : (
-            <div className="flex flex-col gap-2 bg-dark-200/60 p-4 rounded-lg border border-white/5">
-              <div className="flex items-start gap-2 text-sm">
-                <span className="text-light-400 font-bold min-w-16">Input:</span>
-                <span className="font-mono text-light-100 break-all">{ex.input}</span>
+        <div key={`example-${exampleNum}`} className="rounded-xl border border-white/5 bg-dark-300/50 overflow-hidden">
+          <div className="px-4 py-2 bg-dark-300 border-b border-white/5">
+            <span className="text-xs font-bold text-light-400 uppercase tracking-widest">
+              Example {exampleNum}
+            </span>
+          </div>
+          <div className="p-4 flex flex-col gap-3">
+            {ex.images && ex.images.length > 0 && ex.images.map((img, i) => (
+              <div key={i} className="relative w-full max-h-48 rounded-lg overflow-hidden bg-dark-200">
+                <img
+                  src={img}
+                  alt={`Example ${exampleNum} illustration`}
+                  className="object-contain w-full max-h-48"
+                />
               </div>
-              <div className="flex items-start gap-2 text-sm mt-1">
-                <span className="text-light-400 font-bold min-w-16">Output:</span>
-                <span className="font-mono text-light-100 break-all">{ex.output}</span>
-              </div>
-              {ex.explanation && (
-                <div className="flex items-start gap-2 text-sm mt-2 pt-2 border-t border-white/5">
-                  <span className="text-light-400 font-bold min-w-24">Explanation:</span>
-                  <span className="text-light-100/90 leading-relaxed">{ex.explanation}</span>
+            ))}
+
+            {ex.example_text ? (
+              <pre className="font-mono text-sm text-light-100 whitespace-pre-wrap leading-relaxed bg-dark-200/60 p-3 rounded-lg border border-white/5">
+                {ex.example_text}
+              </pre>
+            ) : (
+              <div className="flex flex-col gap-2 bg-dark-200/60 p-4 rounded-lg border border-white/5">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-light-400 font-bold min-w-16">Input:</span>
+                  <span className="font-mono text-light-100 break-all">{ex.input}</span>
                 </div>
-              )}
-            </div>
-          )}
+                <div className="flex items-start gap-2 text-sm mt-1">
+                  <span className="text-light-400 font-bold min-w-16">Output:</span>
+                  <span className="font-mono text-light-100 break-all">{ex.output}</span>
+                </div>
+                {ex.explanation && (
+                  <div className="flex items-start gap-2 text-sm mt-2 pt-2 border-t border-white/5">
+                    <span className="text-light-400 font-bold min-w-24">Explanation:</span>
+                    <span className="text-light-100/90 leading-relaxed">{ex.explanation}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )})}
+      )
+    })}
   </div>
 );
 

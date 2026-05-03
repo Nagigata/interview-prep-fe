@@ -12,9 +12,9 @@ interface RecentActivityTableProps {
 }
 
 const statusClasses: Record<string, string> = {
-  ACCEPTED: "text-[#49de50]",
-  REJECTED: "text-[#f59e0b]",
-  WRONG_ANSWER: "text-[#f59e0b]",
+  ACCEPTED: "text-emerald-400",
+  REJECTED: "text-amber-400",
+  WRONG_ANSWER: "text-amber-400",
   PENDING: "text-light-400",
 };
 

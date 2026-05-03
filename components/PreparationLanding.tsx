@@ -37,10 +37,10 @@ const formatStatus = (status: string) =>
 
 const getStatusTone = (status: string) => {
   if (status === "ACCEPTED") {
-    return "border-success-100/25 bg-success-100/10 text-success-100";
+    return "border-emerald-400/25 bg-emerald-400/10 text-emerald-400";
   }
 
-  return "border-orange-400/25 bg-orange-400/10 text-orange-400";
+  return "border-amber-400/25 bg-amber-400/10 text-amber-400";
 };
 
 const PreparationLanding = ({
@@ -62,115 +62,115 @@ const PreparationLanding = ({
   const text =
     locale === "vi"
       ? {
-          eyebrow: "Workspace cá nhân",
-          heroTitle: `Chào mừng trở lại, ${name}.`,
-          heroSubtitle:
-            "Tiếp tục luyện bài đang dở, khám phá lộ trình mới và chuyển nhanh sang mock interview khi bạn sẵn sàng.",
-          continueLabel: "Tiếp tục học",
-          browseLabel: "Xem Challenges",
-          interviewLabel: "AI Interview",
-          progressTitle: "Nhịp độ học của bạn",
-          progressSubtitle:
-            "Một ảnh chụp nhanh để bạn biết mình đang tiến đến đâu.",
-          continueEyebrow: "Tiếp tục học",
-          continueTitle: "Tiếp tục từ nơi bạn dừng lại",
-          continueSubtitle:
-            "Những challenge gần đây nhất của bạn nằm ở đây để có thể quay lại nhanh mà không cần tìm lại.",
-          noContinue:
-            "Chưa có hoạt động gần đây. Hãy bắt đầu bằng một track cơ bản bên dưới.",
-          recentTitle: "Hoạt động gần đây",
-          recentSubtitle:
-            "Nhìn nhanh những challenge bạn vừa đụng tới và trạng thái hiện tại.",
-          noRecent:
-            "Khi bạn bắt đầu submit challenge, lịch sử gần đây sẽ xuất hiện ở đây.",
-          recommendedTitle: "Track gợi ý để bắt đầu",
-          recommendedSubtitle:
-            "Gợi ý track phù hợp từ dữ liệu bạn đã có, hoặc đơn giản là điểm bắt đầu tốt để lấy đà.",
-          allSkillsTitle: dictionary.preparation.skillTitle,
-          allSkillsSubtitle:
-            "Mỗi skill là một đường vào rõ ràng để bạn luyện theo chủ đề thay vì học rời rạc.",
-          stats: [
-            {
-              label: "Solved Challenges",
-              value: stats?.totalSolvedChallenges ?? 0,
-              icon: Target,
-              accent: "from-success-100/20 to-success-100/5 text-success-100",
-            },
-            {
-              label: "Current Streak",
-              value: stats?.currentStreak ?? 0,
-              icon: Flame,
-              accent: "from-orange-400/20 to-orange-400/5 text-orange-400",
-            },
-            {
-              label: "Acceptance",
-              value: `${Math.round(stats?.acceptanceRate ?? 0)}%`,
-              icon: ChartNoAxesColumn,
-              accent: "from-primary-200/20 to-primary-200/5 text-primary-100",
-            },
-            {
-              label: "Interviews",
-              value: stats?.totalInterviews ?? 0,
-              icon: BrainCircuit,
-              accent: "from-cyan-400/20 to-cyan-400/5 text-cyan-300",
-            },
-          ],
-        }
+        eyebrow: "Workspace cá nhân",
+        heroTitle: `Chào mừng trở lại, ${name}.`,
+        heroSubtitle:
+          "Tiếp tục luyện bài đang dở, khám phá lộ trình mới và chuyển nhanh sang mock interview khi bạn sẵn sàng.",
+        continueLabel: "Tiếp tục học",
+        browseLabel: "Xem Challenges",
+        interviewLabel: "AI Interview",
+        progressTitle: "Nhịp độ học của bạn",
+        progressSubtitle:
+          "Một ảnh chụp nhanh để bạn biết mình đang tiến đến đâu.",
+        continueEyebrow: "Tiếp tục học",
+        continueTitle: "Tiếp tục từ nơi bạn dừng lại",
+        continueSubtitle:
+          "Những challenge gần đây nhất của bạn nằm ở đây để có thể quay lại nhanh mà không cần tìm lại.",
+        noContinue:
+          "Chưa có hoạt động gần đây. Hãy bắt đầu bằng một track cơ bản bên dưới.",
+        recentTitle: "Hoạt động gần đây",
+        recentSubtitle:
+          "Nhìn nhanh những challenge bạn vừa đụng tới và trạng thái hiện tại.",
+        noRecent:
+          "Khi bạn bắt đầu submit challenge, lịch sử gần đây sẽ xuất hiện ở đây.",
+        recommendedTitle: "Track gợi ý để bắt đầu",
+        recommendedSubtitle:
+          "Gợi ý track phù hợp từ dữ liệu bạn đã có, hoặc đơn giản là điểm bắt đầu tốt để lấy đà.",
+        allSkillsTitle: dictionary.preparation.skillTitle,
+        allSkillsSubtitle:
+          "Mỗi skill là một đường vào rõ ràng để bạn luyện theo chủ đề thay vì học rời rạc.",
+        stats: [
+          {
+            label: "Solved Challenges",
+            value: stats?.totalSolvedChallenges ?? 0,
+            icon: Target,
+            accent: "from-success-100/20 to-success-100/5 text-success-100",
+          },
+          {
+            label: "Current Streak",
+            value: stats?.currentStreak ?? 0,
+            icon: Flame,
+            accent: "from-orange-400/20 to-orange-400/5 text-orange-400",
+          },
+          {
+            label: "Acceptance",
+            value: `${Math.round(stats?.acceptanceRate ?? 0)}%`,
+            icon: ChartNoAxesColumn,
+            accent: "from-primary-200/20 to-primary-200/5 text-primary-100",
+          },
+          {
+            label: "Interviews",
+            value: stats?.totalInterviews ?? 0,
+            icon: BrainCircuit,
+            accent: "from-cyan-400/20 to-cyan-400/5 text-cyan-300",
+          },
+        ],
+      }
       : {
-          eyebrow: "Your learning workspace",
-          heroTitle: `Welcome back, ${name}.`,
-          heroSubtitle:
-            "Pick up a challenge, discover a new path, and jump into a mock interview when you are ready.",
-          continueLabel: "Continue learning",
-          browseLabel: "Browse challenges",
-          interviewLabel: "Start mock interview",
-          progressTitle: "Your momentum",
-          progressSubtitle:
-            "A quick snapshot of how your preparation is moving this week.",
-          continueEyebrow: "Continue learning",
-          continueTitle: "Pick up where you left off",
-          continueSubtitle:
-            "Your latest challenges are right here so you can jump back in without digging around.",
-          noContinue:
-            "No recent challenge activity yet. Start with one of the recommended tracks below.",
-          recentTitle: "Recent challenge activity",
-          recentSubtitle:
-            "A quick look at the challenges you touched most recently and how they went.",
-          noRecent:
-            "Once you start submitting solutions, your latest challenge activity will appear here.",
-          recommendedTitle: "Recommended starting tracks",
-          recommendedSubtitle:
-            "A simple recommendation layer built from your recent activity and the most useful paths to begin with.",
-          allSkillsTitle: dictionary.preparation.skillTitle,
-          allSkillsSubtitle:
-            "Each skill gives you a clear entry point so your practice feels guided instead of scattered.",
-          stats: [
-            {
-              label: "Solved Challenges",
-              value: stats?.totalSolvedChallenges ?? 0,
-              icon: Target,
-              accent: "from-success-100/20 to-success-100/5 text-success-100",
-            },
-            {
-              label: "Current Streak",
-              value: stats?.currentStreak ?? 0,
-              icon: Flame,
-              accent: "from-orange-400/20 to-orange-400/5 text-orange-400",
-            },
-            {
-              label: "Acceptance",
-              value: `${Math.round(stats?.acceptanceRate ?? 0)}%`,
-              icon: ChartNoAxesColumn,
-              accent: "from-primary-200/20 to-primary-200/5 text-primary-100",
-            },
-            {
-              label: "Interviews",
-              value: stats?.totalInterviews ?? 0,
-              icon: BrainCircuit,
-              accent: "from-cyan-400/20 to-cyan-400/5 text-cyan-300",
-            },
-          ],
-        };
+        eyebrow: "Your learning workspace",
+        heroTitle: `Welcome back, ${name}.`,
+        heroSubtitle:
+          "Pick up a challenge, discover a new path, and jump into a mock interview when you are ready.",
+        continueLabel: "Continue learning",
+        browseLabel: "Browse challenges",
+        interviewLabel: "Start mock interview",
+        progressTitle: "Your momentum",
+        progressSubtitle:
+          "A quick snapshot of how your preparation is moving this week.",
+        continueEyebrow: "Continue learning",
+        continueTitle: "Pick up where you left off",
+        continueSubtitle:
+          "Your latest challenges are right here so you can jump back in without digging around.",
+        noContinue:
+          "No recent challenge activity yet. Start with one of the recommended tracks below.",
+        recentTitle: "Recent challenge activity",
+        recentSubtitle:
+          "A quick look at the challenges you touched most recently and how they went.",
+        noRecent:
+          "Once you start submitting solutions, your latest challenge activity will appear here.",
+        recommendedTitle: "Recommended starting tracks",
+        recommendedSubtitle:
+          "A simple recommendation layer built from your recent activity and the most useful paths to begin with.",
+        allSkillsTitle: dictionary.preparation.skillTitle,
+        allSkillsSubtitle:
+          "Each skill gives you a clear entry point so your practice feels guided instead of scattered.",
+        stats: [
+          {
+            label: "Solved Challenges",
+            value: stats?.totalSolvedChallenges ?? 0,
+            icon: Target,
+            accent: "from-success-100/20 to-success-100/5 text-success-100",
+          },
+          {
+            label: "Current Streak",
+            value: stats?.currentStreak ?? 0,
+            icon: Flame,
+            accent: "from-orange-400/20 to-orange-400/5 text-orange-400",
+          },
+          {
+            label: "Acceptance",
+            value: `${Math.round(stats?.acceptanceRate ?? 0)}%`,
+            icon: ChartNoAxesColumn,
+            accent: "from-primary-200/20 to-primary-200/5 text-primary-100",
+          },
+          {
+            label: "Interviews",
+            value: stats?.totalInterviews ?? 0,
+            icon: BrainCircuit,
+            accent: "from-cyan-400/20 to-cyan-400/5 text-cyan-300",
+          },
+        ],
+      };
 
   return (
     <div className="flex flex-col gap-10">

@@ -50,6 +50,7 @@ export const vi = {
     strengths: "Điểm mạnh",
     score: "Điểm",
     comment: "Nhận xét",
+    backToInterviews: "Quay lại danh sách",
   },
   common: {
     backHome: "Về lại trang chủ",

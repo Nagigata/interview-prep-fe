@@ -48,6 +48,7 @@ export const en = {
     strengths: "Strengths",
     score: "Score",
     comment: "Comment",
+    backToInterviews: "Back to Interviews",
   },
   common: {
     backHome: "Back to dashboard",

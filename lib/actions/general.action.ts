@@ -1,6 +1,6 @@
 "use server";
 
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import { 
   CreateFeedbackParams, 
   Feedback, 
@@ -108,5 +108,23 @@ export async function getInterviewsByUserId(
     return await apiGet<Interview[]>("/interviews");
   } catch {
     return null;
+  }
+}
+
+export async function getAttemptedInterviews(): Promise<Interview[] | null> {
+  try {
+    return await apiGet<Interview[]>("/interviews/attempted");
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteInterview(interviewId: string) {
+  try {
+    await apiDelete(`/interviews/${interviewId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting interview:", error);
+    return { success: false };
   }
 }

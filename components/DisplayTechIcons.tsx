@@ -1,10 +1,30 @@
+"use client";
+
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { mappings } from "@/constants";
 
-import { cn, getTechLogos } from "@/lib/utils";
-import { TechIconProps } from "@/types";
+const techIconBaseURL = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons";
 
-const DisplayTechIcons = async ({ techStack }: TechIconProps) => {
-  const techIcons = await getTechLogos(techStack);
+const normalizeTechName = (tech: string) => {
+  const key = tech.toLowerCase().replace(/\.js$/, "").replace(/\s+/g, "");
+  return mappings[key as keyof typeof mappings];
+};
+
+interface DisplayTechIconsProps {
+  techStack: string[];
+}
+
+const DisplayTechIcons = ({ techStack }: DisplayTechIconsProps) => {
+  const techIcons = techStack.map((tech) => {
+    const normalized = normalizeTechName(tech);
+    return {
+      tech,
+      url: normalized
+        ? `${techIconBaseURL}/${normalized}/${normalized}-original.svg`
+        : "/tech.svg",
+    };
+  });
 
   return (
     <div className="flex flex-row">
@@ -13,17 +33,19 @@ const DisplayTechIcons = async ({ techStack }: TechIconProps) => {
           key={tech}
           className={cn(
             "relative group bg-dark-300 rounded-full p-2 flex flex-center",
-            index >= 1 && "-ml-3"
+            index >= 1 && "-ml-3",
           )}
         >
           <span className="tech-tooltip">{tech}</span>
-
           <Image
             src={url}
             alt={tech}
             width={100}
             height={100}
             className="size-5"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/tech.svg";
+            }}
           />
         </div>
       ))}
