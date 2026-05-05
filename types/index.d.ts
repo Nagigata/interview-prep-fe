@@ -62,6 +62,7 @@ export interface User {
   email: string;
   id: string;
   role?: string;
+  isActive?: boolean;
   avatarUrl?: string | null;
   createdAt?: string;
 }

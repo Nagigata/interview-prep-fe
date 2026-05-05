@@ -42,7 +42,10 @@ export async function getAdminUserDetail(userId: string) {
   }
 }
 
-export async function updateAdminUser(userId: string, data: { role?: string }) {
+export async function updateAdminUser(
+  userId: string,
+  data: { role?: string; isActive?: boolean }
+) {
   try {
     return await apiPatch<any>(`/admin/users/${userId}`, data);
   } catch {

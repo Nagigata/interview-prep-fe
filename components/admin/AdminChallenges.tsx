@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
   ChevronLeft,
   ChevronRight,
   Plus,
+  Pencil,
   Trash2,
   X,
 } from "lucide-react";
 import {
   createAdminChallenge,
   deleteAdminChallenge,
+  updateAdminChallenge,
 } from "@/lib/actions/admin.actions";
+import CodeEditor from "@/components/CodeEditor";
 
 interface AdminChallengesProps {
   data: any;
@@ -28,6 +32,100 @@ const difficultyColors: Record<string, string> = {
   HARD: "bg-red-500/20 text-red-400",
 };
 
+type ChallengeFormMode = "create" | "edit";
+
+const emptyCreateForm = (skillId = "") => ({
+  title: "",
+  slug: "",
+  skillId,
+  difficulty: "EASY",
+  description: "",
+  topics: "",
+  examples: "[]",
+  constraints: "[]",
+  hints: "[]",
+  followUps: "[]",
+  templateCode: "{}",
+  testCases: "[]",
+  solution: "",
+});
+
+const stringifyJson = (value: unknown, fallback: unknown) =>
+  JSON.stringify(value ?? fallback, null, 2);
+
+const getChallengeFormValues = (challenge: any, fallbackSkillId = "") => ({
+  title: challenge.title || "",
+  slug: challenge.slug || "",
+  skillId: challenge.skillId || challenge.skill?.id || fallbackSkillId,
+  difficulty: challenge.difficulty || "EASY",
+  description: challenge.description || "",
+  topics: challenge.topics || "",
+  examples: stringifyJson(challenge.examples, []),
+  constraints: stringifyJson(challenge.constraints, []),
+  hints: stringifyJson(challenge.hints, []),
+  followUps: stringifyJson(challenge.followUps, []),
+  templateCode: stringifyJson(challenge.templateCode, {}),
+  testCases: stringifyJson(challenge.testCases, []),
+  solution: challenge.solution || "",
+});
+
+const FieldLabel = ({
+  children,
+  required = false,
+}: {
+  children: ReactNode;
+  required?: boolean;
+}) => (
+  <label className="mb-1 flex items-center gap-1.5 text-xs text-light-400">
+    <span>{children}</span>
+    {required ? (
+      <span className="text-red-400">*</span>
+    ) : (
+      <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-light-600">
+        optional
+      </span>
+    )}
+  </label>
+);
+
+const parseJsonField = (label: string, value: string) => {
+  try {
+    return JSON.parse(value || "null");
+  } catch {
+    throw new Error(`Invalid ${label} JSON`);
+  }
+};
+
+const AdminCodeField = ({
+  label,
+  value,
+  language,
+  height = 180,
+  required = false,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  language: string;
+  height?: number;
+  required?: boolean;
+  onChange: (value: string) => void;
+}) => (
+  <div>
+    <FieldLabel required={required}>{label}</FieldLabel>
+    <div
+      className="overflow-hidden rounded-lg border border-white/10"
+      style={{ height }}
+    >
+      <CodeEditor
+        value={value}
+        language={language}
+        onChange={(nextValue) => onChange(nextValue ?? "")}
+      />
+    </div>
+  </div>
+);
+
 export default function AdminChallengesClient({
   data,
   skills,
@@ -36,21 +134,13 @@ export default function AdminChallengesClient({
 }: AdminChallengesProps) {
   const router = useRouter();
   const [search, setSearch] = useState(currentSearch);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [formMode, setFormMode] = useState<ChallengeFormMode | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Form state
-  const [form, setForm] = useState({
-    title: "",
-    slug: "",
-    skillId: skills?.[0]?.id || "",
-    difficulty: "EASY",
-    description: "",
-    topics: "",
-    templateCode: "{}",
-    testCases: "[]",
-  });
+  const [form, setForm] = useState(() => emptyCreateForm(skills?.[0]?.id || ""));
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,57 +169,87 @@ export default function AdminChallengesClient({
     setDeleting(null);
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    if (formMode === "create") {
+      handleCancelForm();
+      return;
+    }
+    setForm(emptyCreateForm(skills?.[0]?.id || ""));
+    setEditingId(null);
+    setFormMode("create");
+  };
+
+  const handleStartEdit = (challenge: any) => {
+    setForm(getChallengeFormValues(challenge, skills?.[0]?.id || ""));
+    setEditingId(challenge.id);
+    setFormMode("edit");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelForm = () => {
+    setFormMode(null);
+    setEditingId(null);
+    setForm(emptyCreateForm(skills?.[0]?.id || ""));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreating(true);
+    setSaving(true);
     try {
-      let templateCode, testCases;
+      let templateCode, testCases, examples, constraints, hints, followUps;
       try {
-        templateCode = JSON.parse(form.templateCode);
-      } catch {
-        alert("Invalid Template Code JSON");
-        setCreating(false);
+        templateCode = parseJsonField("Template Code", form.templateCode);
+        testCases = parseJsonField("Test Cases", form.testCases);
+        examples = parseJsonField("Examples", form.examples);
+        constraints = parseJsonField("Constraints", form.constraints);
+        hints = parseJsonField("Hints", form.hints);
+        followUps = parseJsonField("Follow-ups", form.followUps);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Invalid JSON field");
+        setSaving(false);
         return;
       }
-      try {
-        testCases = JSON.parse(form.testCases);
-      } catch {
-        alert("Invalid Test Cases JSON");
-        setCreating(false);
-        return;
-      }
-      await createAdminChallenge({
+      const payload = {
         ...form,
         templateCode,
         testCases,
-      });
-      setShowCreateForm(false);
-      setForm({
-        title: "",
-        slug: "",
-        skillId: skills?.[0]?.id || "",
-        difficulty: "EASY",
-        description: "",
-        topics: "",
-        templateCode: "{}",
-        testCases: "[]",
-      });
+        examples,
+        constraints,
+        hints,
+        followUps,
+        solution: form.solution.trim(),
+      };
+
+      if (formMode === "edit" && editingId) {
+        await updateAdminChallenge(editingId, payload);
+      } else {
+        await createAdminChallenge(payload);
+      }
+
+      handleCancelForm();
       router.refresh();
     } catch (err) {
-      alert("Failed to create challenge");
+      alert(
+        formMode === "edit"
+          ? "Failed to update challenge"
+          : "Failed to create challenge",
+      );
     }
-    setCreating(false);
+    setSaving(false);
   };
 
   const handleTitleChange = (title: string) => {
-    setForm({
-      ...form,
+    setForm((currentForm) => ({
+      ...currentForm,
       title,
-      slug: title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, ""),
-    });
+      slug:
+        formMode === "create"
+          ? title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-|-$/g, "")
+          : currentForm.slug,
+    }));
   };
 
   if (!data) {
@@ -152,24 +272,41 @@ export default function AdminChallengesClient({
           </p>
         </div>
         <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={handleOpenCreate}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-200/15 text-primary-200 text-sm font-medium hover:bg-primary-200/25 transition-colors"
         >
-          {showCreateForm ? <X className="size-4" /> : <Plus className="size-4" />}
-          {showCreateForm ? "Cancel" : "New Challenge"}
+          {formMode === "create" ? <X className="size-4" /> : <Plus className="size-4" />}
+          {formMode === "create" ? "Cancel" : "New Challenge"}
         </button>
       </div>
 
-      {/* Create Form */}
-      {showCreateForm && (
+      {/* Create/Edit Form */}
+      {formMode && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
           className="rounded-2xl border border-white/10 bg-dark-200/50 p-6 space-y-4"
         >
-          <h3 className="text-base font-semibold text-white">Create Challenge</h3>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-base font-semibold text-white">
+                {formMode === "edit" ? "Edit Challenge" : "Create Challenge"}
+              </h3>
+              <p className="mt-1 text-xs text-light-400">
+                Fields marked with <span className="text-red-400">*</span> are required.
+                Optional JSON fields can stay as empty arrays.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelForm}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-light-400 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-light-400 mb-1">Title</label>
+              <FieldLabel required>Title</FieldLabel>
               <input
                 type="text"
                 required
@@ -179,7 +316,7 @@ export default function AdminChallengesClient({
               />
             </div>
             <div>
-              <label className="block text-xs text-light-400 mb-1">Slug</label>
+              <FieldLabel required>Slug</FieldLabel>
               <input
                 type="text"
                 required
@@ -189,8 +326,9 @@ export default function AdminChallengesClient({
               />
             </div>
             <div>
-              <label className="block text-xs text-light-400 mb-1">Skill</label>
+              <FieldLabel required>Skill</FieldLabel>
               <select
+                required
                 value={form.skillId}
                 onChange={(e) => setForm({ ...form, skillId: e.target.value })}
                 className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
@@ -203,9 +341,7 @@ export default function AdminChallengesClient({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-light-400 mb-1">
-                Difficulty
-              </label>
+              <FieldLabel required>Difficulty</FieldLabel>
               <select
                 value={form.difficulty}
                 onChange={(e) =>
@@ -220,7 +356,7 @@ export default function AdminChallengesClient({
             </div>
           </div>
           <div>
-            <label className="block text-xs text-light-400 mb-1">Topics (comma separated)</label>
+            <FieldLabel>Topics (comma separated)</FieldLabel>
             <input
               type="text"
               value={form.topics}
@@ -230,9 +366,7 @@ export default function AdminChallengesClient({
             />
           </div>
           <div>
-            <label className="block text-xs text-light-400 mb-1">
-              Description
-            </label>
+            <FieldLabel required>Description</FieldLabel>
             <textarea
               required
               rows={3}
@@ -243,42 +377,95 @@ export default function AdminChallengesClient({
               className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50 resize-none"
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-light-400 mb-1">
-                Template Code (JSON)
-              </label>
+              <FieldLabel>Examples (JSON)</FieldLabel>
               <textarea
-                rows={3}
-                value={form.templateCode}
+                rows={5}
+                value={form.examples}
                 onChange={(e) =>
-                  setForm({ ...form, templateCode: e.target.value })
+                  setForm({ ...form, examples: e.target.value })
                 }
                 className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
-                placeholder='{"python": "def solve():\\n    pass"}'
+                placeholder='[{"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "Because nums[0] + nums[1] = 9."}]'
               />
             </div>
             <div>
-              <label className="block text-xs text-light-400 mb-1">
-                Test Cases (JSON)
-              </label>
+              <FieldLabel>Constraints (JSON)</FieldLabel>
               <textarea
-                rows={3}
-                value={form.testCases}
+                rows={5}
+                value={form.constraints}
                 onChange={(e) =>
-                  setForm({ ...form, testCases: e.target.value })
+                  setForm({ ...form, constraints: e.target.value })
                 }
                 className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
-                placeholder='[{"input": "1 2", "output": "3"}]'
+                placeholder='["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9"]'
+              />
+            </div>
+            <div>
+              <FieldLabel>Hints (JSON)</FieldLabel>
+              <textarea
+                rows={4}
+                value={form.hints}
+                onChange={(e) =>
+                  setForm({ ...form, hints: e.target.value })
+                }
+                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
+                placeholder='["Try using a hash map.", "Store values you have already seen."]'
+              />
+            </div>
+            <div>
+              <FieldLabel>Follow-ups (JSON)</FieldLabel>
+              <textarea
+                rows={4}
+                value={form.followUps}
+                onChange={(e) =>
+                  setForm({ ...form, followUps: e.target.value })
+                }
+                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
+                placeholder='["Can you solve it in O(n)?", "How would you handle duplicate values?"]'
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <AdminCodeField
+              label="Template Code (JSON)"
+              language="json"
+              required
+              value={form.templateCode}
+              onChange={(value) => setForm({ ...form, templateCode: value })}
+            />
+            <AdminCodeField
+              label="Test Cases (JSON)"
+              language="json"
+              required
+              value={form.testCases}
+              onChange={(value) => setForm({ ...form, testCases: value })}
+            />
+          </div>
+
+          <AdminCodeField
+            label="Solution"
+            language="javascript"
+            height={220}
+            value={form.solution}
+            onChange={(value) => setForm({ ...form, solution: value })}
+          />
+
           <button
             type="submit"
-            disabled={creating}
+            disabled={saving}
             className="px-6 py-2 rounded-xl bg-primary-200 text-dark-100 text-sm font-bold hover:bg-primary-200/80 transition-colors disabled:opacity-50"
           >
-            {creating ? "Creating..." : "Create Challenge"}
+            {saving
+              ? formMode === "edit"
+                ? "Saving..."
+                : "Creating..."
+              : formMode === "edit"
+                ? "Save Changes"
+                : "Create Challenge"}
           </button>
         </form>
       )}
@@ -356,14 +543,23 @@ export default function AdminChallengesClient({
                   {challenge.totalSubmissions}
                 </td>
                 <td className="px-5 py-4 text-right">
-                  <button
-                    onClick={() => handleDelete(challenge.id)}
-                    disabled={deleting === challenge.id}
-                    className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                    title="Delete"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => handleStartEdit(challenge)}
+                      className="p-1.5 rounded-lg text-light-400 hover:text-primary-200 hover:bg-primary-200/10 transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(challenge.id)}
+                      disabled={deleting === challenge.id}
+                      className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                      title="Delete"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

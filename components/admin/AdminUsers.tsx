@@ -10,7 +10,8 @@ import {
   User,
   AlertTriangle,
   X,
-  Minus,
+  Ban,
+  CheckCircle2,
 } from "lucide-react";
 import { updateAdminUser } from "@/lib/actions/admin.actions";
 
@@ -22,10 +23,13 @@ interface AdminUsersProps {
 }
 
 interface ConfirmState {
+  action: "role" | "status";
   userId: string;
   userName: string;
-  currentRole: string;
-  newRole: string;
+  currentRole?: string;
+  newRole?: string;
+  currentActive?: boolean;
+  newActive?: boolean;
 }
 
 export default function AdminUsersClient({
@@ -57,6 +61,7 @@ export default function AdminUsersClient({
   const openConfirm = (user: any) => {
     const newRole = user.role === "ADMIN" ? "USER" : "ADMIN";
     setConfirm({
+      action: "role",
       userId: user.id,
       userName: user.name,
       currentRole: user.role,
@@ -64,11 +69,25 @@ export default function AdminUsersClient({
     });
   };
 
-  const handleConfirmRole = async () => {
+  const openStatusConfirm = (user: any) => {
+    setConfirm({
+      action: "status",
+      userId: user.id,
+      userName: user.name,
+      currentActive: user.isActive !== false,
+      newActive: user.isActive === false,
+    });
+  };
+
+  const handleConfirmAction = async () => {
     if (!confirm) return;
     setUpdating(confirm.userId);
+    const payload =
+      confirm.action === "role"
+        ? { role: confirm.newRole }
+        : { isActive: confirm.newActive };
     setConfirm(null);
-    await updateAdminUser(confirm.userId, { role: confirm.newRole });
+    await updateAdminUser(confirm.userId, payload);
     setUpdating(null);
     router.refresh();
   };
@@ -123,6 +142,9 @@ export default function AdminUsersClient({
               </th>
               <th className="text-center px-4 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
                 Role
+              </th>
+              <th className="text-center px-4 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                Status
               </th>
               <th className="text-center px-4 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
                 Joined
@@ -186,27 +208,60 @@ export default function AdminUsersClient({
                       {user.role}
                     </span>
                   </td>
+                  <td className="px-4 py-4 text-center">
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${
+                        user.isActive === false
+                          ? "bg-red-500/15 text-red-400"
+                          : "bg-emerald-500/15 text-emerald-400"
+                      }`}
+                    >
+                      {user.isActive === false ? (
+                        <Ban className="size-3" />
+                      ) : (
+                        <CheckCircle2 className="size-3" />
+                      )}
+                      {user.isActive === false ? "Inactive" : "Active"}
+                    </span>
+                  </td>
                   <td className="px-4 py-4 text-center text-xs text-light-400 whitespace-nowrap">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-5 py-4 text-center">
+                  <td className="px-5 py-4 text-right">
                     {isSelf ? (
-                      <span className="text-xs text-light-600 italic">—</span>
+                      <span className="text-xs text-light-600 italic">-</span>
                     ) : (
-                      <button
-                        onClick={() => openConfirm(user)}
-                        disabled={updating === user.id}
-                        className={`text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 whitespace-nowrap ${user.role === "ADMIN"
-                          ? "border-red-500/20 text-red-400 hover:bg-red-500/10"
-                          : "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => openStatusConfirm(user)}
+                          disabled={updating === user.id}
+                          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 whitespace-nowrap ${
+                            user.isActive === false
+                              ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
+                              : "border-red-500/20 text-red-400 hover:bg-red-500/10"
                           }`}
-                      >
-                        {updating === user.id
-                          ? "..."
-                          : user.role === "ADMIN"
-                            ? "Demote"
-                            : "Promote"}
-                      </button>
+                        >
+                          {updating === user.id
+                            ? "..."
+                            : user.isActive === false
+                              ? "Reactivate"
+                              : "Deactivate"}
+                        </button>
+                        <button
+                          onClick={() => openConfirm(user)}
+                          disabled={updating === user.id}
+                          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 whitespace-nowrap ${user.role === "ADMIN"
+                            ? "border-red-500/20 text-red-400 hover:bg-red-500/10"
+                            : "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
+                            }`}
+                        >
+                          {updating === user.id
+                            ? "..."
+                            : user.role === "ADMIN"
+                              ? "Demote"
+                              : "Promote"}
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -252,24 +307,37 @@ export default function AdminUsersClient({
 
             <div className="flex items-center gap-3 mb-4">
               <div
-                className={`rounded-xl p-2.5 ${confirm.newRole === "ADMIN"
-                  ? "bg-emerald-500/15 text-emerald-400"
-                  : "bg-red-500/15 text-red-400"
+                className={`rounded-xl p-2.5 ${
+                  confirm.action === "role" && confirm.newRole === "ADMIN"
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : confirm.action === "status" && confirm.newActive
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "bg-red-500/15 text-red-400"
                   }`}
               >
                 <AlertTriangle className="size-5" />
               </div>
               <h3 className="text-lg font-semibold text-white">
-                {confirm.newRole === "ADMIN"
-                  ? "Promote to Admin"
-                  : "Demote to User"}
+                {confirm.action === "role"
+                  ? confirm.newRole === "ADMIN"
+                    ? "Promote to Admin"
+                    : "Demote to User"
+                  : confirm.newActive
+                    ? "Reactivate Account"
+                    : "Deactivate Account"}
               </h3>
             </div>
 
             <p className="text-sm text-light-100 mb-1">
               Are you sure you want to{" "}
               <span className="font-semibold text-white">
-                {confirm.newRole === "ADMIN" ? "promote" : "demote"}
+                {confirm.action === "role"
+                  ? confirm.newRole === "ADMIN"
+                    ? "promote"
+                    : "demote"
+                  : confirm.newActive
+                    ? "reactivate"
+                    : "deactivate"}
               </span>{" "}
               the following user?
             </p>
@@ -278,13 +346,24 @@ export default function AdminUsersClient({
                 {confirm.userName}
               </p>
               <p className="text-xs text-light-400 mt-0.5">
-                {confirm.currentRole} → {confirm.newRole}
+                {confirm.action === "role"
+                  ? `${confirm.currentRole} -> ${confirm.newRole}`
+                  : `${confirm.currentActive ? "Active" : "Inactive"} -> ${
+                      confirm.newActive ? "Active" : "Inactive"
+                    }`}
               </p>
             </div>
 
-            {confirm.newRole === "ADMIN" && (
+            {confirm.action === "role" && confirm.newRole === "ADMIN" && (
               <p className="text-xs text-amber-400/80 mb-4">
                 ⚠ Admin users have full access to manage all data in the system.
+              </p>
+            )}
+
+            {confirm.action === "status" && confirm.newActive === false && (
+              <p className="text-xs text-red-400/80 mb-4">
+                This user will not be able to sign in or use protected APIs until
+                reactivated.
               </p>
             )}
 
@@ -296,13 +375,21 @@ export default function AdminUsersClient({
                 Cancel
               </button>
               <button
-                onClick={handleConfirmRole}
-                className={`px-4 py-2 text-sm rounded-xl font-medium transition-colors ${confirm.newRole === "ADMIN"
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                  : "bg-red-500 text-white hover:bg-red-600"
+                onClick={handleConfirmAction}
+                className={`px-4 py-2 text-sm rounded-xl font-medium transition-colors ${
+                  (confirm.action === "role" && confirm.newRole === "ADMIN") ||
+                  (confirm.action === "status" && confirm.newActive)
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : "bg-red-500 text-white hover:bg-red-600"
                   }`}
               >
-                {confirm.newRole === "ADMIN" ? "Promote" : "Demote"}
+                {confirm.action === "role"
+                  ? confirm.newRole === "ADMIN"
+                    ? "Promote"
+                    : "Demote"
+                  : confirm.newActive
+                    ? "Reactivate"
+                    : "Deactivate"}
               </button>
             </div>
           </div>
