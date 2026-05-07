@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -15,12 +14,17 @@ import {
 } from "lucide-react";
 import { updateAdminUser } from "@/lib/actions/admin.actions";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminSearchBar from "@/components/admin/AdminSearchBar";
+import AdminSelectFilter from "@/components/admin/AdminSelectFilter";
 import UserAvatar from "@/components/UserAvatar";
 
 interface AdminUsersProps {
   data: any;
   currentPage: number;
   currentSearch: string;
+  currentRole: string;
+  currentStatus: string;
   currentUserId: string;
 }
 
@@ -68,10 +72,24 @@ const getConfirmDetails = (confirm: ConfirmState) => {
   } as const;
 };
 
+const roleOptions = [
+  { value: "all", label: "All roles" },
+  { value: "ADMIN", label: "Admin" },
+  { value: "USER", label: "User" },
+];
+
+const statusOptions = [
+  { value: "all", label: "All status" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
 export default function AdminUsersClient({
   data,
   currentPage,
   currentSearch,
+  currentRole,
+  currentStatus,
   currentUserId,
 }: AdminUsersProps) {
   const router = useRouter();
@@ -79,18 +97,38 @@ export default function AdminUsersClient({
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const buildParams = (overrides?: {
+    page?: number;
+    search?: string;
+    role?: string;
+    status?: string;
+  }) => {
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    params.set("page", "1");
-    router.push(`/admin/users?${params.toString()}`);
+    const nextSearch = overrides?.search ?? currentSearch;
+    const nextRole = overrides?.role ?? currentRole;
+    const nextStatus = overrides?.status ?? currentStatus;
+    const nextPage = overrides?.page ?? currentPage;
+
+    if (nextSearch) params.set("search", nextSearch);
+    if (nextRole) params.set("role", nextRole);
+    if (nextStatus) params.set("status", nextStatus);
+    params.set("page", String(nextPage));
+    return params;
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams();
-    if (currentSearch) params.set("search", currentSearch);
-    params.set("page", String(page));
+    const params = buildParams({ page });
+    router.push(`/admin/users?${params.toString()}`);
+  };
+
+  const handleFilterChange = (
+    key: "role" | "status",
+    value: string,
+  ) => {
+    const params = buildParams({
+      [key]: value === "all" ? "" : value,
+      page: 1,
+    });
     router.push(`/admin/users?${params.toString()}`);
   };
 
@@ -149,16 +187,32 @@ export default function AdminUsersClient({
         </div>
       </div>
 
-      <form onSubmit={handleSearch} className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-light-400" />
-        <input
-          type="text"
-          placeholder="Search by name or email..."
+      <AdminFilterBar>
+        <AdminSearchBar
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-dark-200 py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-light-600 transition-colors focus:border-primary-200/50 focus:outline-none"
+          onChange={setSearch}
+          onSubmit={() => {
+            const params = buildParams({ search: search.trim(), page: 1 });
+            router.push(`/admin/users?${params.toString()}`);
+          }}
+          placeholder="Search by name or email..."
         />
-      </form>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <AdminSelectFilter
+            label="Role"
+            value={currentRole || "all"}
+            options={roleOptions}
+            onChange={(value) => handleFilterChange("role", value)}
+          />
+          <AdminSelectFilter
+            label="Status"
+            value={currentStatus || "all"}
+            options={statusOptions}
+            onChange={(value) => handleFilterChange("status", value)}
+          />
+        </div>
+      </AdminFilterBar>
 
       <div className="overflow-x-auto rounded-2xl border border-white/5 bg-dark-200/50">
         <table className="w-full min-w-[800px]">
@@ -191,7 +245,7 @@ export default function AdminUsersClient({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {data.items?.map((user: any) => {
+            {data.items?.length ? data.items.map((user: any) => {
               const isSelf = user.id === currentUserId;
               return (
                 <tr
@@ -323,7 +377,20 @@ export default function AdminUsersClient({
                   </td>
                 </tr>
               );
-            })}
+            }) : (
+              <tr>
+                <td colSpan={8} className="px-5 py-12 text-center">
+                  <div className="mx-auto max-w-sm">
+                    <p className="text-sm font-medium text-white">
+                      No users found
+                    </p>
+                    <p className="mt-1 text-sm text-light-400">
+                      Try changing the search keyword, role, or status filter.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

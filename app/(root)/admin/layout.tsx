@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getMyProfile } from "@/lib/actions/user.actions";
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminShell from "@/components/admin/AdminShell";
 
 export default async function AdminLayout({
   children,
@@ -14,10 +14,5 @@ export default async function AdminLayout({
     redirect("/preparation");
   }
 
-  return (
-    <div className="min-h-screen bg-dark-100">
-      <AdminSidebar />
-      <main className="ml-60 pt-16 p-8">{children}</main>
-    </div>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }

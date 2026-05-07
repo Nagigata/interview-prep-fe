@@ -9,6 +9,8 @@ import {
   Code2,
   Layers,
   ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,19 +22,46 @@ const sidebarItems = [
   { href: "/admin/skills", label: "Skills", icon: Layers },
 ];
 
-const AdminSidebar = () => {
+interface AdminSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-60 border-r border-white/10 bg-dark-100/95 backdrop-blur-md z-40 flex flex-col">
-      <div className="p-5 border-b border-white/10">
-        <h2 className="text-lg font-bold text-primary-200 tracking-wide">
-          Admin Panel
-        </h2>
-        <p className="text-xs text-light-400 mt-0.5">System Management</p>
+    <aside className="fixed bottom-0 left-0 top-16 z-40 flex w-[var(--admin-sidebar-width)] flex-col border-r border-white/10 bg-dark-100/95 backdrop-blur-md transition-[width] duration-300 ease-out">
+      <div
+        className={cn(
+          "flex items-center border-b border-white/10 p-5",
+          collapsed ? "justify-center px-3" : "justify-between",
+        )}
+      >
+        {!collapsed && (
+          <div>
+            <h2 className="text-lg font-bold tracking-wide text-primary-200">
+              Admin Panel
+            </h2>
+            <p className="mt-0.5 text-xs text-light-400">System Management</p>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={onToggle}
+          className="rounded-xl border border-white/10 p-2 text-light-400 transition-colors hover:bg-white/5 hover:text-white"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="size-4" />
+          ) : (
+            <PanelLeftClose className="size-4" />
+          )}
+        </button>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {sidebarItems.map((item) => {
           const isActive =
             (item.href === "/admin" && pathname === "/admin") ||
@@ -43,16 +72,18 @@ const AdminSidebar = () => {
             <Link
               key={item.href}
               href={item.href}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                "flex items-center rounded-xl py-2.5 text-sm font-medium transition-all duration-200",
+                collapsed ? "justify-center px-0" : "gap-3 px-3",
                 isActive
                   ? "bg-primary-200/15 text-primary-200 shadow-[0_0_12px_rgba(202,197,254,0.08)]"
                   : "text-light-400 hover:text-light-100 hover:bg-white/5"
               )}
             >
               <Icon className={cn("size-[18px]", isActive && "text-primary-200")} />
-              {item.label}
-              {isActive && (
+              {!collapsed && item.label}
+              {isActive && !collapsed && (
                 <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-200" />
               )}
             </Link>
@@ -60,13 +91,17 @@ const AdminSidebar = () => {
         })}
       </nav>
 
-      <div className="p-3 border-t border-white/10">
+      <div className="border-t border-white/10 p-3">
         <Link
           href="/preparation"
-          className="flex items-center gap-2 px-3 py-2.5 text-sm text-light-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+          title={collapsed ? "Back to App" : undefined}
+          className={cn(
+            "flex items-center rounded-xl py-2.5 text-sm text-light-400 transition-colors hover:bg-white/5 hover:text-white",
+            collapsed ? "justify-center px-0" : "gap-2 px-3",
+          )}
         >
           <ArrowLeft className="size-4" />
-          Back to App
+          {!collapsed && "Back to App"}
         </Link>
       </div>
     </aside>

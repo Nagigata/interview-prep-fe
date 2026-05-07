@@ -10,9 +10,12 @@ export async function getAdminDashboard() {
   }
 }
 
-export async function getAdminStats() {
+export async function getAdminStats(params?: { range?: string }) {
   try {
-    return await apiGet<any>("/admin/stats");
+    const query = new URLSearchParams();
+    if (params?.range) query.set("range", params.range);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return await apiGet<any>(`/admin/stats${suffix}`);
   } catch {
     return null;
   }
@@ -22,12 +25,16 @@ export async function getAdminUsers(params?: {
   page?: number;
   limit?: number;
   search?: string;
+  role?: string;
+  status?: string;
 }) {
   try {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.search) query.set("search", params.search);
+    if (params?.role) query.set("role", params.role);
+    if (params?.status) query.set("status", params.status);
     return await apiGet<any>(`/admin/users?${query.toString()}`);
   } catch {
     return null;
@@ -57,12 +64,18 @@ export async function getAdminInterviews(params?: {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
+  type?: string;
+  level?: string;
 }) {
   try {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.search) query.set("search", params.search);
+    if (params?.status) query.set("status", params.status);
+    if (params?.type) query.set("type", params.type);
+    if (params?.level) query.set("level", params.level);
     return await apiGet<any>(`/admin/interviews?${query.toString()}`);
   } catch {
     return null;
@@ -102,12 +115,18 @@ export async function getAdminChallenges(params?: {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
+  difficulty?: string;
+  skillId?: string;
 }) {
   try {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.search) query.set("search", params.search);
+    if (params?.status) query.set("status", params.status);
+    if (params?.difficulty) query.set("difficulty", params.difficulty);
+    if (params?.skillId) query.set("skillId", params.skillId);
     return await apiGet<any>(`/admin/challenges?${query.toString()}`);
   } catch {
     return null;
@@ -122,9 +141,12 @@ export async function updateAdminChallenge(id: string, data: any) {
   return apiPatch<any>(`/admin/challenges/${id}`, data);
 }
 
-export async function getAdminSkills() {
+export async function getAdminSkills(params?: { status?: string }) {
   try {
-    return await apiGet<any>("/admin/skills");
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return await apiGet<any>(`/admin/skills${suffix}`);
   } catch {
     return null;
   }

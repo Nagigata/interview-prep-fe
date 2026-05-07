@@ -3,21 +3,26 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Search,
   Plus,
   Pencil,
   CheckCircle2,
   Lock,
   Unlock,
   X,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import {
   createAdminChallenge,
   updateAdminChallenge,
 } from "@/lib/actions/admin.actions";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 import AdminPagination from "@/components/admin/AdminPagination";
+import AdminSearchBar from "@/components/admin/AdminSearchBar";
+import AdminSelectFilter from "@/components/admin/AdminSelectFilter";
 import CodeEditor from "@/components/CodeEditor";
 
 interface AdminChallengesProps {
@@ -25,6 +30,9 @@ interface AdminChallengesProps {
   skills: any[];
   currentPage: number;
   currentSearch: string;
+  currentStatus: string;
+  currentDifficulty: string;
+  currentSkillId: string;
 }
 
 const difficultyColors: Record<string, string> = {
@@ -32,6 +40,23 @@ const difficultyColors: Record<string, string> = {
   MEDIUM: "bg-amber-500/20 text-amber-400",
   HARD: "bg-red-500/20 text-red-400",
 };
+
+const statusOptions = [
+  { value: "all", label: "All status" },
+  { value: "active", label: "Active" },
+  { value: "disabled", label: "Disabled" },
+];
+
+const difficultyOptions = [
+  { value: "all", label: "All difficulty" },
+  { value: "EASY", label: "Easy" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "HARD", label: "Hard" },
+];
+
+const formDifficultyOptions = difficultyOptions.filter(
+  (option) => option.value !== "all",
+);
 
 type ChallengeFormMode = "create" | "edit";
 
@@ -111,6 +136,52 @@ const parseJsonField = (label: string, value: string) => {
   }
 };
 
+const ExpandedFieldModal = ({
+  label,
+  onClose,
+  children,
+}: {
+  label: string;
+  onClose: () => void;
+  children: ReactNode;
+}) => (
+  <motion.div
+    className="fixed inset-x-0 bottom-0 top-16 z-[200] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.18 }}
+    onClick={onClose}
+  >
+    <motion.div
+      className="flex h-[min(860px,calc(100vh-2rem))] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#101219] shadow-2xl"
+      initial={{ opacity: 0, scale: 0.96, y: 18 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, y: 18 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.28em] text-light-500">
+            Editing
+          </p>
+          <h3 className="mt-1 text-lg font-semibold text-white">{label}</h3>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-light-200 transition-colors hover:bg-white/5 hover:text-white"
+        >
+          <Minimize2 className="size-4" />
+          Collapse
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 p-4">{children}</div>
+    </motion.div>
+  </motion.div>
+);
+
 const AdminCodeField = ({
   label,
   value,
@@ -125,27 +196,126 @@ const AdminCodeField = ({
   height?: number;
   required?: boolean;
   onChange: (value: string) => void;
-}) => (
-  <div>
-    <FieldLabel required={required}>{label}</FieldLabel>
-    <div
-      className="overflow-hidden rounded-lg border border-white/10"
-      style={{ height }}
-    >
-      <CodeEditor
-        value={value}
-        language={language}
-        onChange={(nextValue) => onChange(nextValue ?? "")}
-      />
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <FieldLabel required={required}>{label}</FieldLabel>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-[11px] font-medium text-light-400 transition-colors hover:bg-white/5 hover:text-white"
+        >
+          <Maximize2 className="size-3.5" />
+          Expand
+        </button>
+      </div>
+      <div
+        className="overflow-hidden rounded-lg border border-white/10"
+        style={{ height }}
+      >
+        <CodeEditor
+          value={value}
+          language={language}
+          onChange={(nextValue) => onChange(nextValue ?? "")}
+        />
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <ExpandedFieldModal
+            label={label}
+            onClose={() => setExpanded(false)}
+          >
+            <div className="h-full overflow-hidden rounded-2xl border border-white/10">
+              <CodeEditor
+                value={value}
+                language={language}
+                onChange={(nextValue) => onChange(nextValue ?? "")}
+              />
+            </div>
+          </ExpandedFieldModal>
+        )}
+      </AnimatePresence>
     </div>
-  </div>
-);
+  );
+};
+
+const AdminTextareaField = ({
+  label,
+  value,
+  rows,
+  required = false,
+  mono = false,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  rows: number;
+  required?: boolean;
+  mono?: boolean;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <FieldLabel required={required}>{label}</FieldLabel>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-[11px] font-medium text-light-400 transition-colors hover:bg-white/5 hover:text-white"
+        >
+          <Maximize2 className="size-3.5" />
+          Expand
+        </button>
+      </div>
+      <textarea
+        required={required}
+        rows={rows}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={`w-full resize-none rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-white focus:border-primary-200/50 focus:outline-none ${
+          mono ? "font-mono text-xs" : "text-sm"
+        }`}
+        placeholder={placeholder}
+      />
+
+      <AnimatePresence>
+        {expanded && (
+          <ExpandedFieldModal
+            label={label}
+            onClose={() => setExpanded(false)}
+          >
+            <textarea
+              required={required}
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              className={`h-full w-full resize-none rounded-2xl border border-white/10 bg-dark-100 px-4 py-4 text-white focus:border-primary-200/50 focus:outline-none ${
+                mono ? "font-mono text-sm" : "text-base leading-7"
+              }`}
+              placeholder={placeholder}
+            />
+          </ExpandedFieldModal>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function AdminChallengesClient({
   data,
   skills,
   currentPage,
   currentSearch,
+  currentStatus,
+  currentDifficulty,
+  currentSkillId,
 }: AdminChallengesProps) {
   const router = useRouter();
   const [search, setSearch] = useState(currentSearch);
@@ -160,6 +330,17 @@ export default function AdminChallengesClient({
 
   // Form state
   const [form, setForm] = useState(() => emptyCreateForm(skills?.[0]?.id || ""));
+  const skillOptions = [
+    { value: "all", label: "All skills" },
+    ...(skills || []).map((skill: any) => ({
+      value: skill.id,
+      label: skill.name,
+    })),
+  ];
+  const formSkillOptions = (skills || []).map((skill: any) => ({
+    value: skill.id,
+    label: skill.name,
+  }));
 
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
@@ -216,18 +397,41 @@ export default function AdminChallengesClient({
     return null;
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const buildParams = (overrides?: {
+    page?: number;
+    search?: string;
+    status?: string;
+    difficulty?: string;
+    skillId?: string;
+  }) => {
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    params.set("page", "1");
-    router.push(`/admin/challenges?${params.toString()}`);
+    const nextSearch = overrides?.search ?? currentSearch;
+    const nextStatus = overrides?.status ?? currentStatus;
+    const nextDifficulty = overrides?.difficulty ?? currentDifficulty;
+    const nextSkillId = overrides?.skillId ?? currentSkillId;
+    const nextPage = overrides?.page ?? currentPage;
+
+    if (nextSearch) params.set("search", nextSearch);
+    if (nextStatus) params.set("status", nextStatus);
+    if (nextDifficulty) params.set("difficulty", nextDifficulty);
+    if (nextSkillId) params.set("skillId", nextSkillId);
+    params.set("page", String(nextPage));
+    return params;
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams();
-    if (currentSearch) params.set("search", currentSearch);
-    params.set("page", String(page));
+    const params = buildParams({ page });
+    router.push(`/admin/challenges?${params.toString()}`);
+  };
+
+  const handleFilterChange = (
+    key: "status" | "difficulty" | "skillId",
+    value: string,
+  ) => {
+    const params = buildParams({
+      [key]: value === "all" ? "" : value,
+      page: 1,
+    });
     router.push(`/admin/challenges?${params.toString()}`);
   };
 
@@ -449,109 +653,85 @@ export default function AdminChallengesClient({
             </div>
             <div>
               <FieldLabel required>Skill</FieldLabel>
-              <select
-                required
+              <AdminSelectFilter
+                label="Skill"
                 value={form.skillId}
-                onChange={(e) => setForm({ ...form, skillId: e.target.value })}
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
-              >
-                {skills?.map((s: any) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                options={formSkillOptions}
+                onChange={(value) => setForm({ ...form, skillId: value })}
+                hideLabel
+                className="min-w-0"
+                triggerClassName="rounded-lg bg-dark-100 py-2"
+              />
             </div>
             <div>
               <FieldLabel required>Difficulty</FieldLabel>
-              <select
+              <AdminSelectFilter
+                label="Difficulty"
                 value={form.difficulty}
-                onChange={(e) =>
-                  setForm({ ...form, difficulty: e.target.value })
-                }
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
-              >
-                <option value="EASY">Easy</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HARD">Hard</option>
-              </select>
+                options={formDifficultyOptions}
+                onChange={(value) => setForm({ ...form, difficulty: value })}
+                hideLabel
+                className="min-w-0"
+                triggerClassName="rounded-lg bg-dark-100 py-2"
+              />
             </div>
           </div>
           <div>
             <FieldLabel>Topics (comma separated)</FieldLabel>
-            <input
-              type="text"
+            <textarea
+              rows={2}
               value={form.topics}
-              onChange={(e) => setForm({ ...form, topics: e.target.value })}
-              className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
+              onChange={(event) =>
+                setForm({ ...form, topics: event.target.value })
+              }
+              className="w-full resize-none rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:border-primary-200/50 focus:outline-none"
               placeholder="Array,String,Dynamic Programming"
             />
           </div>
-          <div>
-            <FieldLabel required>Description</FieldLabel>
-            <textarea
-              required
-              rows={3}
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50 resize-none"
+          <AdminTextareaField
+            label="Description"
+            required
+            rows={3}
+            value={form.description}
+            onChange={(value) => setForm({ ...form, description: value })}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <AdminTextareaField
+              label="Examples (JSON)"
+              rows={5}
+              mono
+              value={form.examples}
+              onChange={(value) => setForm({ ...form, examples: value })}
+              placeholder='[{"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "Because nums[0] + nums[1] = 9."}]'
+            />
+            <AdminTextareaField
+              label="Constraints (JSON)"
+              rows={5}
+              mono
+              value={form.constraints}
+              onChange={(value) => setForm({ ...form, constraints: value })}
+              placeholder='["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9"]'
+            />
+            <AdminTextareaField
+              label="Hints (JSON)"
+              rows={4}
+              mono
+              value={form.hints}
+              onChange={(value) => setForm({ ...form, hints: value })}
+              placeholder='["Try using a hash map.", "Store values you have already seen."]'
+            />
+            <AdminTextareaField
+              label="Follow-ups (JSON)"
+              rows={4}
+              mono
+              value={form.followUps}
+              onChange={(value) => setForm({ ...form, followUps: value })}
+              placeholder='["Can you solve it in O(n)?", "How would you handle duplicate values?"]'
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <FieldLabel>Examples (JSON)</FieldLabel>
-              <textarea
-                rows={5}
-                value={form.examples}
-                onChange={(e) =>
-                  setForm({ ...form, examples: e.target.value })
-                }
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
-                placeholder='[{"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "Because nums[0] + nums[1] = 9."}]'
-              />
-            </div>
-            <div>
-              <FieldLabel>Constraints (JSON)</FieldLabel>
-              <textarea
-                rows={5}
-                value={form.constraints}
-                onChange={(e) =>
-                  setForm({ ...form, constraints: e.target.value })
-                }
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
-                placeholder='["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9"]'
-              />
-            </div>
-            <div>
-              <FieldLabel>Hints (JSON)</FieldLabel>
-              <textarea
-                rows={4}
-                value={form.hints}
-                onChange={(e) =>
-                  setForm({ ...form, hints: e.target.value })
-                }
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
-                placeholder='["Try using a hash map.", "Store values you have already seen."]'
-              />
-            </div>
-            <div>
-              <FieldLabel>Follow-ups (JSON)</FieldLabel>
-              <textarea
-                rows={4}
-                value={form.followUps}
-                onChange={(e) =>
-                  setForm({ ...form, followUps: e.target.value })
-                }
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary-200/50 resize-none font-mono"
-                placeholder='["Can you solve it in O(n)?", "How would you handle duplicate values?"]'
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <AdminCodeField
               label="Template Code (JSON)"
               language="json"
@@ -592,132 +772,168 @@ export default function AdminChallengesClient({
         </form>
       )}
 
-      {/* Search */}
-      <form onSubmit={handleSearch} className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-light-400" />
-        <input
-          type="text"
-          placeholder="Search by title or topic..."
+      <AdminFilterBar>
+        <AdminSearchBar
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-dark-200 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-light-600 focus:outline-none focus:border-primary-200/50 transition-colors"
+          onChange={setSearch}
+          onSubmit={() => {
+            const params = buildParams({ search: search.trim(), page: 1 });
+            router.push(`/admin/challenges?${params.toString()}`);
+          }}
+          placeholder="Search by title or topic..."
         />
-      </form>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <AdminSelectFilter
+            label="Skill"
+            value={currentSkillId || "all"}
+            options={skillOptions}
+            onChange={(value) => handleFilterChange("skillId", value)}
+          />
+          <AdminSelectFilter
+            label="Difficulty"
+            value={currentDifficulty || "all"}
+            options={difficultyOptions}
+            onChange={(value) => handleFilterChange("difficulty", value)}
+          />
+          <AdminSelectFilter
+            label="Status"
+            value={currentStatus || "all"}
+            options={statusOptions}
+            onChange={(value) => handleFilterChange("status", value)}
+          />
+        </div>
+      </AdminFilterBar>
 
       {/* Table */}
       <div className="rounded-2xl border border-white/5 bg-dark-200/50 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/5">
-              <th className="text-left px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Title
-              </th>
-              <th className="text-left px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Skill
-              </th>
-              <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Difficulty
-              </th>
-              <th className="text-left px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Topics
-              </th>
-              <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Submissions
-              </th>
-              <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="text-right px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {data.items?.map((challenge: any) => (
-              <tr
-                key={challenge.id}
-                className="hover:bg-white/[0.02] transition-colors"
-              >
-                <td className="px-5 py-4">
-                  <p className="text-sm font-medium text-white">
-                    {challenge.title}
-                  </p>
-                  <p className="text-xs text-light-400">{challenge.slug}</p>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-xs text-light-400 bg-white/5 px-2 py-1 rounded-md">
-                    {challenge.skill?.name}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-center">
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      difficultyColors[challenge.difficulty] ||
-                      "bg-white/10 text-light-400"
-                    }`}
-                  >
-                    {challenge.difficulty}
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  <p className="text-xs text-light-400 truncate max-w-[200px]">
-                    {challenge.topics}
-                  </p>
-                </td>
-                <td className="px-5 py-4 text-center text-sm text-light-100">
-                  {challenge.totalSubmissions}
-                </td>
-                <td className="px-5 py-4 text-center">
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                      challenge.isActive === false
-                        ? "bg-red-500/15 text-red-400"
-                        : "bg-emerald-500/15 text-emerald-400"
-                    }`}
-                  >
-                    {challenge.isActive === false ? (
-                      <Lock className="size-3" />
-                    ) : (
-                      <CheckCircle2 className="size-3" />
-                    )}
-                    {challenge.isActive === false ? "Disabled" : "Active"}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => handleStartEdit(challenge)}
-                      className="p-1.5 rounded-lg text-light-400 hover:text-primary-200 hover:bg-primary-200/10 transition-colors"
-                      title="Edit"
-                    >
-                      <Pencil className="size-4" />
-                    </button>
-                    <button
-                      onClick={() => openStatusConfirm(challenge)}
-                      disabled={statusUpdating === challenge.id}
-                      className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
-                        challenge.isActive === false
-                          ? "text-emerald-400/70 hover:bg-emerald-500/10 hover:text-emerald-400"
-                          : "text-red-400/60 hover:bg-red-500/10 hover:text-red-400"
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px]">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="text-left px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="text-left px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Skill
+                </th>
+                <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Difficulty
+                </th>
+                <th className="text-left px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Topics
+                </th>
+                <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Submissions
+                </th>
+                <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="text-right px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {data.items?.length ? data.items.map((challenge: any) => (
+                <tr
+                  key={challenge.id}
+                  className="hover:bg-white/[0.02] transition-colors"
+                >
+                  <td className="px-5 py-4">
+                    <p className="text-sm font-medium text-white">
+                      {challenge.title}
+                    </p>
+                    <p className="text-xs text-light-400">{challenge.slug}</p>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="text-xs text-light-400 bg-white/5 px-2 py-1 rounded-md">
+                      {challenge.skill?.name}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-center">
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        difficultyColors[challenge.difficulty] ||
+                        "bg-white/10 text-light-400"
                       }`}
-                      title={
+                    >
+                      {challenge.difficulty}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <p className="text-xs text-light-400 truncate max-w-[200px]">
+                      {challenge.topics}
+                    </p>
+                  </td>
+                  <td className="px-5 py-4 text-center text-sm text-light-100">
+                    {challenge.totalSubmissions}
+                  </td>
+                  <td className="px-5 py-4 text-center">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                         challenge.isActive === false
-                          ? "Enable challenge"
-                          : "Disable challenge"
-                      }
+                          ? "bg-red-500/15 text-red-400"
+                          : "bg-emerald-500/15 text-emerald-400"
+                      }`}
                     >
                       {challenge.isActive === false ? (
-                        <Unlock className="size-4" />
+                        <Lock className="size-3" />
                       ) : (
-                        <Lock className="size-4" />
+                        <CheckCircle2 className="size-3" />
                       )}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      {challenge.isActive === false ? "Disabled" : "Active"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleStartEdit(challenge)}
+                        className="p-1.5 rounded-lg text-light-400 hover:text-primary-200 hover:bg-primary-200/10 transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                      <button
+                        onClick={() => openStatusConfirm(challenge)}
+                        disabled={statusUpdating === challenge.id}
+                        className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                          challenge.isActive === false
+                            ? "text-emerald-400/70 hover:bg-emerald-500/10 hover:text-emerald-400"
+                            : "text-red-400/60 hover:bg-red-500/10 hover:text-red-400"
+                        }`}
+                        title={
+                          challenge.isActive === false
+                            ? "Enable challenge"
+                            : "Disable challenge"
+                        }
+                      >
+                        {challenge.isActive === false ? (
+                          <Unlock className="size-4" />
+                        ) : (
+                          <Lock className="size-4" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={7} className="px-5 py-12 text-center">
+                    <div className="mx-auto max-w-sm">
+                      <p className="text-sm font-medium text-white">
+                        No challenges found
+                      </p>
+                      <p className="mt-1 text-sm text-light-400">
+                        Try changing the search keyword, skill, difficulty, or status filter.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <AdminPagination

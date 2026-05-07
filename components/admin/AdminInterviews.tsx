@@ -3,18 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, Eye, RotateCcw, Search } from "lucide-react";
+import { Archive, Eye, RotateCcw } from "lucide-react";
 import {
   archiveAdminInterview,
   restoreAdminInterview,
 } from "@/lib/actions/admin.actions";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 import AdminPagination from "@/components/admin/AdminPagination";
+import AdminSearchBar from "@/components/admin/AdminSearchBar";
+import AdminSelectFilter from "@/components/admin/AdminSelectFilter";
 
 interface AdminInterviewsProps {
   data: any;
   currentPage: number;
   currentSearch: string;
+  currentStatus: string;
+  currentType: string;
+  currentLevel: string;
 }
 
 interface InterviewArchiveDialog {
@@ -25,10 +31,33 @@ interface InterviewArchiveDialog {
   totalAttempts: number;
 }
 
+const statusOptions = [
+  { value: "all", label: "All status" },
+  { value: "active", label: "Active" },
+  { value: "archived", label: "Archived" },
+];
+
+const typeOptions = [
+  { value: "all", label: "All types" },
+  { value: "Technical", label: "Technical" },
+  { value: "Behavioral", label: "Behavioral" },
+  { value: "Mixed", label: "Mixed" },
+];
+
+const levelOptions = [
+  { value: "all", label: "All levels" },
+  { value: "Junior", label: "Junior" },
+  { value: "Mid-level", label: "Mid-level" },
+  { value: "Senior", label: "Senior" },
+];
+
 export default function AdminInterviewsClient({
   data,
   currentPage,
   currentSearch,
+  currentStatus,
+  currentType,
+  currentLevel,
 }: AdminInterviewsProps) {
   const router = useRouter();
   const [search, setSearch] = useState(currentSearch);
@@ -45,18 +74,41 @@ export default function AdminInterviewsClient({
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const buildParams = (overrides?: {
+    page?: number;
+    search?: string;
+    status?: string;
+    type?: string;
+    level?: string;
+  }) => {
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    params.set("page", "1");
-    router.push(`/admin/interviews?${params.toString()}`);
+    const nextSearch = overrides?.search ?? currentSearch;
+    const nextStatus = overrides?.status ?? currentStatus;
+    const nextType = overrides?.type ?? currentType;
+    const nextLevel = overrides?.level ?? currentLevel;
+    const nextPage = overrides?.page ?? currentPage;
+
+    if (nextSearch) params.set("search", nextSearch);
+    if (nextStatus) params.set("status", nextStatus);
+    if (nextType) params.set("type", nextType);
+    if (nextLevel) params.set("level", nextLevel);
+    params.set("page", String(nextPage));
+    return params;
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams();
-    if (currentSearch) params.set("search", currentSearch);
-    params.set("page", String(page));
+    const params = buildParams({ page });
+    router.push(`/admin/interviews?${params.toString()}`);
+  };
+
+  const handleFilterChange = (
+    key: "status" | "type" | "level",
+    value: string,
+  ) => {
+    const params = buildParams({
+      [key]: value === "all" ? "" : value,
+      page: 1,
+    });
     router.push(`/admin/interviews?${params.toString()}`);
   };
 
@@ -109,6 +161,7 @@ export default function AdminInterviewsClient({
   const levelColors: Record<string, string> = {
     junior: "bg-emerald-500/20 text-emerald-400",
     mid: "bg-amber-500/20 text-amber-400",
+    "mid-level": "bg-amber-500/20 text-amber-400",
     senior: "bg-red-500/20 text-red-400",
   };
 
@@ -121,17 +174,38 @@ export default function AdminInterviewsClient({
         </p>
       </div>
 
-      {/* Search */}
-      <form onSubmit={handleSearch} className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-light-400" />
-        <input
-          type="text"
-          placeholder="Search by role or user name..."
+      <AdminFilterBar>
+        <AdminSearchBar
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-dark-200 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-light-600 focus:outline-none focus:border-primary-200/50 transition-colors"
+          onChange={setSearch}
+          onSubmit={() => {
+            const params = buildParams({ search: search.trim(), page: 1 });
+            router.push(`/admin/interviews?${params.toString()}`);
+          }}
+          placeholder="Search by role or user name..."
         />
-      </form>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <AdminSelectFilter
+            label="Status"
+            value={currentStatus || "all"}
+            options={statusOptions}
+            onChange={(value) => handleFilterChange("status", value)}
+          />
+          <AdminSelectFilter
+            label="Type"
+            value={currentType || "all"}
+            options={typeOptions}
+            onChange={(value) => handleFilterChange("type", value)}
+          />
+          <AdminSelectFilter
+            label="Level"
+            value={currentLevel || "all"}
+            options={levelOptions}
+            onChange={(value) => handleFilterChange("level", value)}
+          />
+        </div>
+      </AdminFilterBar>
 
       {/* Table */}
       <div className="rounded-2xl border border-white/5 bg-dark-200/50 overflow-hidden">
@@ -169,7 +243,7 @@ export default function AdminInterviewsClient({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {data.items?.map((interview: any) => (
+            {data.items?.length ? data.items.map((interview: any) => (
               <tr
                 key={interview.id}
                 className="hover:bg-white/[0.02] transition-colors"
@@ -265,7 +339,20 @@ export default function AdminInterviewsClient({
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan={9} className="px-5 py-12 text-center">
+                  <div className="mx-auto max-w-sm">
+                    <p className="text-sm font-medium text-white">
+                      No interviews found
+                    </p>
+                    <p className="mt-1 text-sm text-light-400">
+                      Try changing the search keyword, status, type, or level filter.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
           </table>
         </div>

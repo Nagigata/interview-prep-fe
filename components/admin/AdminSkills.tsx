@@ -8,9 +8,12 @@ import {
   updateAdminSkill,
 } from "@/lib/actions/admin.actions";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminSelectFilter from "@/components/admin/AdminSelectFilter";
 
 interface AdminSkillsProps {
   skills: any[] | null;
+  currentStatus: string;
 }
 
 interface SkillStatusDialog {
@@ -40,7 +43,16 @@ const toSlug = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
+const statusOptions = [
+  { value: "all", label: "All status" },
+  { value: "active", label: "Active" },
+  { value: "disabled", label: "Disabled" },
+];
+
+export default function AdminSkillsClient({
+  skills,
+  currentStatus,
+}: AdminSkillsProps) {
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -57,6 +69,12 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
 
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
+
+  const handleStatusFilterChange = (value: string) => {
+    const params = new URLSearchParams();
+    if (value !== "all") params.set("status", value);
+    router.push(`/admin/skills${params.toString() ? `?${params.toString()}` : ""}`);
+  };
 
   const validateSkillForm = (
     skillForm: typeof emptySkillForm,
@@ -302,8 +320,19 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
         </form>
       )}
 
+      <AdminFilterBar className="lg:justify-end">
+        <div className="grid gap-3 sm:grid-cols-1">
+          <AdminSelectFilter
+            label="Status"
+            value={currentStatus || "all"}
+            options={statusOptions}
+            onChange={handleStatusFilterChange}
+          />
+        </div>
+      </AdminFilterBar>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {skills.map((skill: any) => (
+        {skills.length ? skills.map((skill: any) => (
           <div
             key={skill.id}
             className="flex min-h-[160px] rounded-2xl border border-white/5 bg-dark-200/50 p-5 transition-all hover:border-white/10"
@@ -432,7 +461,14 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
               </div>
             )}
           </div>
-        ))}
+        )) : (
+          <div className="col-span-full rounded-2xl border border-white/5 bg-dark-200/50 px-5 py-12 text-center">
+            <p className="text-sm font-medium text-white">No skills found</p>
+            <p className="mt-1 text-sm text-light-400">
+              Try changing the status filter.
+            </p>
+          </div>
+        )}
       </div>
 
       {statusDialog && (
