@@ -10,9 +10,12 @@ import {
   User,
   Ban,
   CheckCircle2,
+  ShieldCheck,
+  UserMinus,
 } from "lucide-react";
 import { updateAdminUser } from "@/lib/actions/admin.actions";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import UserAvatar from "@/components/UserAvatar";
 
 interface AdminUsersProps {
   data: any;
@@ -197,9 +200,12 @@ export default function AdminUsersClient({
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-200/10 text-sm font-semibold text-primary-200">
-                        {user.name?.charAt(0).toUpperCase()}
-                      </div>
+                      <UserAvatar
+                        name={user.name || "User"}
+                        avatarUrl={user.avatarUrl}
+                        size="sm"
+                        className="shrink-0 shadow-none"
+                      />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-white">
                           {user.name}
@@ -269,32 +275,48 @@ export default function AdminUsersClient({
                         <button
                           onClick={() => openStatusConfirm(user)}
                           disabled={updating === user.id}
-                          className={`whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${
+                          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${
                             user.isActive === false
                               ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
                               : "border-red-500/20 text-red-400 hover:bg-red-500/10"
                           }`}
                         >
-                          {updating === user.id
-                            ? "..."
-                            : user.isActive === false
-                              ? "Reactivate"
-                              : "Deactivate"}
+                          {updating === user.id ? (
+                            "..."
+                          ) : user.isActive === false ? (
+                            <>
+                              <CheckCircle2 className="size-3.5" />
+                              Reactivate
+                            </>
+                          ) : (
+                            <>
+                              <Ban className="size-3.5" />
+                              Deactivate
+                            </>
+                          )}
                         </button>
                         <button
                           onClick={() => openRoleConfirm(user)}
                           disabled={updating === user.id}
-                          className={`whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${
+                          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${
                             user.role === "ADMIN"
                               ? "border-red-500/20 text-red-400 hover:bg-red-500/10"
                               : "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
                           }`}
                         >
-                          {updating === user.id
-                            ? "..."
-                            : user.role === "ADMIN"
-                              ? "Demote"
-                              : "Promote"}
+                          {updating === user.id ? (
+                            "..."
+                          ) : user.role === "ADMIN" ? (
+                            <>
+                              <UserMinus className="size-3.5" />
+                              Demote
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="size-3.5" />
+                              Promote
+                            </>
+                          )}
                         </button>
                       </div>
                     )}

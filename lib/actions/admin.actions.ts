@@ -69,6 +69,35 @@ export async function getAdminInterviews(params?: {
   }
 }
 
+export async function getAdminInterviewDetail(interviewId: string) {
+  try {
+    return await apiGet<any>(`/admin/interviews/${interviewId}`);
+  } catch {
+    return null;
+  }
+}
+
+export async function getAdminInterviewAttemptDetail(
+  interviewId: string,
+  attemptId: string
+) {
+  try {
+    return await apiGet<any>(
+      `/admin/interviews/${interviewId}/attempts/${attemptId}`
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function archiveAdminInterview(interviewId: string) {
+  return apiPatch<any>(`/admin/interviews/${interviewId}/archive`);
+}
+
+export async function restoreAdminInterview(interviewId: string) {
+  return apiPatch<any>(`/admin/interviews/${interviewId}/restore`);
+}
+
 export async function getAdminChallenges(params?: {
   page?: number;
   limit?: number;
