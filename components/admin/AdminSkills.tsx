@@ -2,76 +2,213 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Code2 } from "lucide-react";
+import { Code2, Lock, Plus, Unlock, X } from "lucide-react";
 import {
   createAdminSkill,
   updateAdminSkill,
 } from "@/lib/actions/admin.actions";
+import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
 
 interface AdminSkillsProps {
   skills: any[] | null;
 }
+
+interface SkillStatusDialog {
+  id: string;
+  name: string;
+  slug: string;
+  challengeCount: number;
+  isActive: boolean;
+}
+
+interface SkillNoticeDialog {
+  title: string;
+  description: string;
+  warning?: string;
+}
+
+const emptySkillForm = {
+  name: "",
+  slug: "",
+  description: "",
+  icon: "",
+};
+
+const toSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", description: "", icon: "" });
-  const [form, setForm] = useState({
-    name: "",
-    slug: "",
-    description: "",
-    icon: "",
-  });
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const [statusDialog, setStatusDialog] = useState<SkillStatusDialog | null>(
+    null,
+  );
+  const [noticeDialog, setNoticeDialog] = useState<SkillNoticeDialog | null>(
+    null,
+  );
+  const [editForm, setEditForm] = useState(emptySkillForm);
+  const [form, setForm] = useState(emptySkillForm);
+
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    error instanceof Error ? error.message : fallback;
+
+  const validateSkillForm = (
+    skillForm: typeof emptySkillForm,
+    currentSkillId?: string,
+  ) => {
+    const name = skillForm.name.trim();
+    const slug = skillForm.slug.trim();
+    const normalizedName = name.toLowerCase();
+    const normalizedSlug = slug.toLowerCase();
+
+    if (!name || !slug) {
+      return {
+        title: "Invalid Skill",
+        description: "Name and slug are required.",
+        warning: "Please fill in both fields before saving.",
+      };
+    }
+
+    const duplicatedName = skills?.find(
+      (skill: any) =>
+        skill.name?.trim().toLowerCase() === normalizedName &&
+        (!currentSkillId || skill.id !== currentSkillId),
+    );
+
+    if (duplicatedName) {
+      return {
+        title: "Duplicated Name",
+        description: `The name "${name}" is already used by another skill.`,
+        warning: "Please choose a unique skill name before saving.",
+      };
+    }
+
+    const duplicatedSlug = skills?.find(
+      (skill: any) =>
+        skill.slug?.trim().toLowerCase() === normalizedSlug &&
+        (!currentSkillId || skill.id !== currentSkillId),
+    );
+
+    if (duplicatedSlug) {
+      return {
+        title: "Duplicated Slug",
+        description: `The slug "${slug}" is already used by another skill.`,
+        warning: "Please choose a unique slug before saving.",
+      };
+    }
+
+    return null;
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationError = validateSkillForm(form);
+    if (validationError) {
+      setNoticeDialog(validationError);
+      return;
+    }
+
     setCreating(true);
     try {
-      await createAdminSkill(form);
+      await createAdminSkill({
+        ...form,
+        name: form.name.trim(),
+        slug: form.slug.trim(),
+      });
       setShowCreateForm(false);
-      setForm({ name: "", slug: "", description: "", icon: "" });
+      setForm(emptySkillForm);
       router.refresh();
-    } catch {
-      alert("Failed to create skill");
+    } catch (error) {
+      setNoticeDialog({
+        title: "Create Skill Failed",
+        description: getErrorMessage(error, "Failed to create skill"),
+        warning:
+          "Please check whether the skill name and slug are unique, then try again.",
+      });
     }
     setCreating(false);
-  };
-
-  const handleNameChange = (name: string) => {
-    setForm({
-      ...form,
-      name,
-      slug: name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, ""),
-    });
   };
 
   const handleStartEdit = (skill: any) => {
     setEditingId(skill.id);
     setEditForm({
       name: skill.name,
+      slug: skill.slug,
       description: skill.description || "",
       icon: skill.icon || "",
     });
   };
 
   const handleSaveEdit = async (id: string) => {
+    const validationError = validateSkillForm(editForm, id);
+    if (validationError) {
+      setNoticeDialog(validationError);
+      return;
+    }
+
     try {
-      await updateAdminSkill(id, editForm);
+      await updateAdminSkill(id, {
+        ...editForm,
+        name: editForm.name.trim(),
+        slug: editForm.slug.trim(),
+      });
       setEditingId(null);
       router.refresh();
-    } catch {
-      alert("Failed to update skill");
+    } catch (error) {
+      setNoticeDialog({
+        title: "Update Skill Failed",
+        description: getErrorMessage(error, "Failed to update skill"),
+        warning:
+          "Please check whether the skill name and slug are unique, then try again.",
+      });
     }
+  };
+
+  const openStatusDialog = (skill: any) => {
+    setStatusDialog({
+      id: skill.id,
+      name: skill.name,
+      slug: skill.slug,
+      challengeCount: skill._count?.challenges || 0,
+      isActive: skill.isActive !== false,
+    });
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!statusDialog) return;
+
+    setStatusUpdatingId(statusDialog.id);
+    try {
+      await updateAdminSkill(statusDialog.id, {
+        isActive: !statusDialog.isActive,
+      });
+      setStatusDialog(null);
+      router.refresh();
+    } catch (error) {
+      setNoticeDialog({
+        title: statusDialog.isActive
+          ? "Disable Skill Failed"
+          : "Enable Skill Failed",
+        description: getErrorMessage(
+          error,
+          statusDialog.isActive
+            ? "Failed to disable skill"
+            : "Failed to enable skill",
+        ),
+      });
+    }
+    setStatusUpdatingId(null);
   };
 
   if (!skills) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="flex h-[60vh] items-center justify-center">
         <p className="text-light-400">Failed to load skills.</p>
       </div>
     );
@@ -82,13 +219,13 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Skill Management</h1>
-          <p className="text-light-400 text-sm mt-1">
+          <p className="mt-1 text-sm text-light-400">
             {skills.length} total skills
           </p>
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-200/15 text-primary-200 text-sm font-medium hover:bg-primary-200/25 transition-colors"
+          className="flex items-center gap-2 rounded-xl bg-primary-200/15 px-4 py-2 text-sm font-medium text-primary-200 transition-colors hover:bg-primary-200/25"
         >
           {showCreateForm ? (
             <X className="size-4" />
@@ -99,37 +236,39 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
         </button>
       </div>
 
-      {/* Create Form */}
       {showCreateForm && (
         <form
           onSubmit={handleCreate}
-          className="rounded-2xl border border-white/10 bg-dark-200/50 p-6 space-y-4"
+          className="space-y-4 rounded-2xl border border-white/10 bg-dark-200/50 p-6"
         >
           <h3 className="text-base font-semibold text-white">Create Skill</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-light-400 mb-1">Name</label>
+              <label className="mb-1 block text-xs text-light-400">Name</label>
               <input
                 type="text"
                 required
                 value={form.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setForm({ ...form, name, slug: toSlug(name) });
+                }}
+                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:border-primary-200/50 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs text-light-400 mb-1">Slug</label>
+              <label className="mb-1 block text-xs text-light-400">Slug</label>
               <input
                 type="text"
                 required
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
+                className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:border-primary-200/50 focus:outline-none"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-light-400 mb-1">
+            <label className="mb-1 block text-xs text-light-400">
               Description
             </label>
             <input
@@ -138,40 +277,39 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
               }
-              className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
+              className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:border-primary-200/50 focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-xs text-light-400 mb-1">
+            <label className="mb-1 block text-xs text-light-400">
               Icon URL
             </label>
             <input
               type="text"
               value={form.icon}
               onChange={(e) => setForm({ ...form, icon: e.target.value })}
-              className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-200/50"
+              className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-2 text-sm text-white focus:border-primary-200/50 focus:outline-none"
               placeholder="https://cdn.jsdelivr.net/..."
             />
           </div>
           <button
             type="submit"
             disabled={creating}
-            className="px-6 py-2 rounded-xl bg-primary-200 text-dark-100 text-sm font-bold hover:bg-primary-200/80 transition-colors disabled:opacity-50"
+            className="rounded-xl bg-primary-200 px-6 py-2 text-sm font-bold text-dark-100 transition-colors hover:bg-primary-200/80 disabled:opacity-50"
           >
             {creating ? "Creating..." : "Create Skill"}
           </button>
         </form>
       )}
 
-      {/* Skills Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {skills.map((skill: any) => (
           <div
             key={skill.id}
-            className="rounded-2xl border border-white/5 bg-dark-200/50 p-5 hover:border-white/10 transition-all"
+            className="flex min-h-[160px] rounded-2xl border border-white/5 bg-dark-200/50 p-5 transition-all hover:border-white/10"
           >
             {editingId === skill.id ? (
-              <div className="space-y-3">
+              <div className="w-full space-y-3">
                 <input
                   type="text"
                   value={editForm.name}
@@ -179,6 +317,16 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
                     setEditForm({ ...editForm, name: e.target.value })
                   }
                   className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-1.5 text-sm text-white focus:outline-none"
+                  placeholder="Name"
+                />
+                <input
+                  type="text"
+                  value={editForm.slug}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, slug: e.target.value })
+                  }
+                  className="w-full rounded-lg border border-white/10 bg-dark-100 px-3 py-1.5 text-sm text-white focus:outline-none"
+                  placeholder="Slug"
                 />
                 <input
                   type="text"
@@ -201,58 +349,127 @@ export default function AdminSkillsClient({ skills }: AdminSkillsProps) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSaveEdit(skill.id)}
-                    className="px-3 py-1 text-xs rounded-lg bg-primary-200 text-dark-100 font-medium"
+                    className="rounded-lg bg-primary-200 px-3 py-1 text-xs font-medium text-dark-100"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="px-3 py-1 text-xs rounded-lg border border-white/10 text-light-400"
+                    className="rounded-lg border border-white/10 px-3 py-1 text-xs text-light-400"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <>
-                <div className="flex items-center gap-3 mb-3">
+              <div className="flex w-full flex-col">
+                <div className="flex items-start gap-3">
                   {skill.icon ? (
                     <img
                       src={skill.icon}
                       alt={skill.name}
-                      className="size-8 object-contain"
+                      className="mt-0.5 size-8 object-contain"
                     />
                   ) : (
-                    <div className="size-8 rounded-lg bg-primary-200/10 flex items-center justify-center">
+                    <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-primary-200/10">
                       <Code2 className="size-4 text-primary-200" />
                     </div>
                   )}
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">
-                      {skill.name}
-                    </h3>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-semibold text-white">
+                        {skill.name}
+                      </h3>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          skill.isActive === false
+                            ? "bg-red-500/15 text-red-400"
+                            : "bg-emerald-500/15 text-emerald-400"
+                        }`}
+                      >
+                        {skill.isActive === false ? "Disabled" : "Active"}
+                      </span>
+                    </div>
                     <p className="text-xs text-light-400">{skill.slug}</p>
                   </div>
                 </div>
-                <p className="text-xs text-light-400 mb-3 line-clamp-2">
+                <p className="mt-3 line-clamp-2 text-xs text-light-400">
                   {skill.description || "No description"}
                 </p>
-                <div className="flex items-center justify-between">
+                <div className="mt-auto flex items-end justify-between gap-3 pt-5">
                   <span className="text-xs text-light-400">
                     {skill._count?.challenges || 0} challenges
                   </span>
-                  <button
-                    onClick={() => handleStartEdit(skill)}
-                    className="text-xs px-3 py-1 rounded-lg border border-white/10 text-light-400 hover:text-white hover:bg-white/5 transition-colors"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleStartEdit(skill)}
+                      className="rounded-lg border border-white/10 px-3 py-1 text-xs text-light-400 transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => openStatusDialog(skill)}
+                      disabled={statusUpdatingId === skill.id}
+                      className={`rounded-lg border p-1.5 transition-colors disabled:opacity-50 ${
+                        skill.isActive === false
+                          ? "border-emerald-400/10 text-emerald-400/70 hover:bg-emerald-500/10 hover:text-emerald-400"
+                          : "border-red-400/10 text-red-400/70 hover:bg-red-500/10 hover:text-red-400"
+                      }`}
+                      title={
+                        skill.isActive === false
+                          ? "Enable skill"
+                          : "Disable skill"
+                      }
+                    >
+                      {skill.isActive === false ? (
+                        <Unlock className="size-3.5" />
+                      ) : (
+                        <Lock className="size-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         ))}
       </div>
+
+      {statusDialog && (
+        <AdminConfirmDialog
+          title={statusDialog.isActive ? "Disable Skill" : "Enable Skill"}
+          description={
+            statusDialog.isActive
+              ? "This skill and its challenges will be hidden from users."
+              : "This skill and its active challenges will be visible to users again."
+          }
+          itemName={statusDialog.name}
+          itemMeta={`${statusDialog.slug} • ${statusDialog.challengeCount} challenge(s)`}
+          warning={
+            statusDialog.isActive
+              ? "Existing challenges, submissions, and bookmarks will be kept for history."
+              : undefined
+          }
+          confirmLabel={statusDialog.isActive ? "Disable" : "Enable"}
+          variant={statusDialog.isActive ? "danger" : "success"}
+          loading={statusUpdatingId === statusDialog.id}
+          onCancel={() => setStatusDialog(null)}
+          onConfirm={handleConfirmStatusChange}
+        />
+      )}
+
+      {noticeDialog && (
+        <AdminConfirmDialog
+          title={noticeDialog.title}
+          description={noticeDialog.description}
+          warning={noticeDialog.warning}
+          confirmLabel="Got it"
+          variant="warning"
+          hideCancel
+          onCancel={() => setNoticeDialog(null)}
+          onConfirm={() => setNoticeDialog(null)}
+        />
+      )}
     </div>
   );
 }

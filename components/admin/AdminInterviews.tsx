@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search } from "lucide-react";
+import AdminPagination from "@/components/admin/AdminPagination";
 
 interface AdminInterviewsProps {
   data: any;
@@ -159,28 +160,11 @@ export default function AdminInterviewsClient({
         </table>
       </div>
 
-      {/* Pagination */}
-      {data.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-            className="p-2 rounded-lg border border-white/10 text-light-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <span className="text-sm text-light-400 px-3">
-            Page {currentPage} of {data.totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= data.totalPages}
-            className="p-2 rounded-lg border border-white/10 text-light-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
-      )}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={data.totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

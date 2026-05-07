@@ -5,18 +5,19 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
   Plus,
   Pencil,
-  Trash2,
+  CheckCircle2,
+  Lock,
+  Unlock,
   X,
 } from "lucide-react";
 import {
   createAdminChallenge,
-  deleteAdminChallenge,
   updateAdminChallenge,
 } from "@/lib/actions/admin.actions";
+import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import AdminPagination from "@/components/admin/AdminPagination";
 import CodeEditor from "@/components/CodeEditor";
 
 interface AdminChallengesProps {
@@ -33,6 +34,20 @@ const difficultyColors: Record<string, string> = {
 };
 
 type ChallengeFormMode = "create" | "edit";
+
+interface StatusChallengeConfirm {
+  id: string;
+  title: string;
+  slug: string;
+  totalSubmissions: number;
+  isActive: boolean;
+}
+
+interface ChallengeNoticeDialog {
+  title: string;
+  description: string;
+  warning?: string;
+}
 
 const emptyCreateForm = (skillId = "") => ({
   title: "",
@@ -136,11 +151,70 @@ export default function AdminChallengesClient({
   const [search, setSearch] = useState(currentSearch);
   const [formMode, setFormMode] = useState<ChallengeFormMode | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [statusConfirm, setStatusConfirm] =
+    useState<StatusChallengeConfirm | null>(null);
+  const [noticeDialog, setNoticeDialog] =
+    useState<ChallengeNoticeDialog | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Form state
   const [form, setForm] = useState(() => emptyCreateForm(skills?.[0]?.id || ""));
+
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    error instanceof Error ? error.message : fallback;
+
+  const validateChallengeIdentity = (currentChallengeId?: string) => {
+    const title = form.title.trim();
+    const slug = form.slug.trim();
+    const normalizedTitle = title.toLowerCase();
+    const normalizedSlug = slug.toLowerCase();
+
+    if (!title || !slug || !form.skillId) {
+      return {
+        title: "Invalid Challenge",
+        description: "Title, slug, and skill are required.",
+        warning: "Please fill in all required identity fields before saving.",
+      };
+    }
+
+    const duplicatedTitle = data?.items?.find(
+      (challenge: any) =>
+        challenge.skill?.id === form.skillId &&
+        challenge.title?.trim().toLowerCase() === normalizedTitle &&
+        (!currentChallengeId || challenge.id !== currentChallengeId),
+    );
+
+    if (duplicatedTitle) {
+      const skillName =
+        skills?.find((skill: any) => skill.id === form.skillId)?.name ||
+        "this skill";
+
+      return {
+        title: "Duplicated Challenge Title",
+        description: `"${title}" already exists in ${skillName}.`,
+        warning:
+          "Challenge titles should be unique inside the same skill to avoid confusing admins and users.",
+      };
+    }
+
+    const duplicatedSlug = data?.items?.find(
+      (challenge: any) =>
+        challenge.slug?.trim().toLowerCase() === normalizedSlug &&
+        (!currentChallengeId || challenge.id !== currentChallengeId),
+    );
+
+    if (duplicatedSlug) {
+      return {
+        title: "Duplicated Challenge Slug",
+        description: `The slug "${slug}" is already used by another challenge.`,
+        warning:
+          "Please choose a unique slug because it is used as the technical identifier.",
+      };
+    }
+
+    return null;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,16 +231,40 @@ export default function AdminChallengesClient({
     router.push(`/admin/challenges?${params.toString()}`);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this challenge? All related submissions will be removed.")) return;
-    setDeleting(id);
+  const openStatusConfirm = (challenge: any) => {
+    setStatusConfirm({
+      id: challenge.id,
+      title: challenge.title,
+      slug: challenge.slug,
+      totalSubmissions: challenge.totalSubmissions || 0,
+      isActive: challenge.isActive !== false,
+    });
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!statusConfirm) return;
+
+    setStatusUpdating(statusConfirm.id);
     try {
-      await deleteAdminChallenge(id);
+      await updateAdminChallenge(statusConfirm.id, {
+        isActive: !statusConfirm.isActive,
+      });
+      setStatusConfirm(null);
       router.refresh();
     } catch (err) {
-      alert("Failed to delete challenge");
+      setNoticeDialog({
+        title: statusConfirm.isActive
+          ? "Disable Challenge Failed"
+          : "Enable Challenge Failed",
+        description: getErrorMessage(
+          err,
+          statusConfirm.isActive
+            ? "Failed to disable challenge"
+            : "Failed to enable challenge",
+        ),
+      });
     }
-    setDeleting(null);
+    setStatusUpdating(null);
   };
 
   const handleOpenCreate = () => {
@@ -194,6 +292,14 @@ export default function AdminChallengesClient({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationError = validateChallengeIdentity(
+      formMode === "edit" ? editingId || undefined : undefined,
+    );
+    if (validationError) {
+      setNoticeDialog(validationError);
+      return;
+    }
+
     setSaving(true);
     try {
       let templateCode, testCases, examples, constraints, hints, followUps;
@@ -205,12 +311,19 @@ export default function AdminChallengesClient({
         hints = parseJsonField("Hints", form.hints);
         followUps = parseJsonField("Follow-ups", form.followUps);
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Invalid JSON field");
+        setNoticeDialog({
+          title: "Invalid JSON Field",
+          description: getErrorMessage(error, "Invalid JSON field"),
+          warning:
+            "Please fix the JSON value in the code editor before saving.",
+        });
         setSaving(false);
         return;
       }
       const payload = {
         ...form,
+        title: form.title.trim(),
+        slug: form.slug.trim(),
         templateCode,
         testCases,
         examples,
@@ -229,11 +342,20 @@ export default function AdminChallengesClient({
       handleCancelForm();
       router.refresh();
     } catch (err) {
-      alert(
-        formMode === "edit"
-          ? "Failed to update challenge"
-          : "Failed to create challenge",
-      );
+      setNoticeDialog({
+        title:
+          formMode === "edit"
+            ? "Update Challenge Failed"
+            : "Create Challenge Failed",
+        description: getErrorMessage(
+          err,
+          formMode === "edit"
+            ? "Failed to update challenge"
+            : "Failed to create challenge",
+        ),
+        warning:
+          "Please check whether the title is unique inside this skill and the slug is unique across all challenges.",
+      });
     }
     setSaving(false);
   };
@@ -502,6 +624,9 @@ export default function AdminChallengesClient({
               <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
                 Submissions
               </th>
+              <th className="text-center px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
+                Status
+              </th>
               <th className="text-right px-5 py-3.5 text-xs font-medium text-light-400 uppercase tracking-wider">
                 Actions
               </th>
@@ -542,6 +667,22 @@ export default function AdminChallengesClient({
                 <td className="px-5 py-4 text-center text-sm text-light-100">
                   {challenge.totalSubmissions}
                 </td>
+                <td className="px-5 py-4 text-center">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                      challenge.isActive === false
+                        ? "bg-red-500/15 text-red-400"
+                        : "bg-emerald-500/15 text-emerald-400"
+                    }`}
+                  >
+                    {challenge.isActive === false ? (
+                      <Lock className="size-3" />
+                    ) : (
+                      <CheckCircle2 className="size-3" />
+                    )}
+                    {challenge.isActive === false ? "Disabled" : "Active"}
+                  </span>
+                </td>
                 <td className="px-5 py-4 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <button
@@ -552,12 +693,24 @@ export default function AdminChallengesClient({
                       <Pencil className="size-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(challenge.id)}
-                      disabled={deleting === challenge.id}
-                      className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                      title="Delete"
+                      onClick={() => openStatusConfirm(challenge)}
+                      disabled={statusUpdating === challenge.id}
+                      className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                        challenge.isActive === false
+                          ? "text-emerald-400/70 hover:bg-emerald-500/10 hover:text-emerald-400"
+                          : "text-red-400/60 hover:bg-red-500/10 hover:text-red-400"
+                      }`}
+                      title={
+                        challenge.isActive === false
+                          ? "Enable challenge"
+                          : "Disable challenge"
+                      }
                     >
-                      <Trash2 className="size-4" />
+                      {challenge.isActive === false ? (
+                        <Unlock className="size-4" />
+                      ) : (
+                        <Lock className="size-4" />
+                      )}
                     </button>
                   </div>
                 </td>
@@ -567,27 +720,46 @@ export default function AdminChallengesClient({
         </table>
       </div>
 
-      {/* Pagination */}
-      {data.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-            className="p-2 rounded-lg border border-white/10 text-light-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <span className="text-sm text-light-400 px-3">
-            Page {currentPage} of {data.totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= data.totalPages}
-            className="p-2 rounded-lg border border-white/10 text-light-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={data.totalPages}
+        onPageChange={handlePageChange}
+      />
+
+      {statusConfirm && (
+        <AdminConfirmDialog
+          title={statusConfirm.isActive ? "Disable Challenge" : "Enable Challenge"}
+          description={
+            statusConfirm.isActive
+              ? "This challenge will be hidden from users and cannot be run or submitted."
+              : "This challenge will be visible to users again."
+          }
+          itemName={statusConfirm.title}
+          itemMeta={`${statusConfirm.slug} • ${statusConfirm.totalSubmissions} submission(s)`}
+          warning={
+            statusConfirm.isActive
+              ? "Existing submissions and bookmarks will be kept for history."
+              : undefined
+          }
+          confirmLabel={statusConfirm.isActive ? "Disable" : "Enable"}
+          variant={statusConfirm.isActive ? "danger" : "success"}
+          loading={statusUpdating === statusConfirm.id}
+          onCancel={() => setStatusConfirm(null)}
+          onConfirm={handleConfirmStatusChange}
+        />
+      )}
+
+      {noticeDialog && (
+        <AdminConfirmDialog
+          title={noticeDialog.title}
+          description={noticeDialog.description}
+          warning={noticeDialog.warning}
+          confirmLabel="Got it"
+          variant="warning"
+          hideCancel
+          onCancel={() => setNoticeDialog(null)}
+          onConfirm={() => setNoticeDialog(null)}
+        />
       )}
     </div>
   );

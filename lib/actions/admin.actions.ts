@@ -1,6 +1,6 @@
 "use server";
 
-import { apiGet, apiPost, apiPatch } from "@/lib/api";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 
 export async function getAdminDashboard() {
   try {
@@ -93,11 +93,6 @@ export async function updateAdminChallenge(id: string, data: any) {
   return apiPatch<any>(`/admin/challenges/${id}`, data);
 }
 
-export async function deleteAdminChallenge(id: string) {
-  const { apiDelete } = await import("@/lib/api");
-  return apiDelete<any>(`/admin/challenges/${id}`);
-}
-
 export async function getAdminSkills() {
   try {
     return await apiGet<any>("/admin/skills");
@@ -117,7 +112,13 @@ export async function createAdminSkill(data: {
 
 export async function updateAdminSkill(
   id: string,
-  data: { name?: string; description?: string; icon?: string }
+  data: {
+    name?: string;
+    slug?: string;
+    description?: string;
+    icon?: string;
+    isActive?: boolean;
+  }
 ) {
   return apiPatch<any>(`/admin/skills/${id}`, data);
 }
